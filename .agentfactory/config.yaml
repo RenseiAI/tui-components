@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: RepositoryConfig
+repository: github.com/RenseiAI/tui-components
+packageManager: none
+buildCommand: "go build ./..."
+testCommand: "go test ./..."
+validateCommand: "go vet ./..."
+allowedProjects:
+  - TUIComponents
+quality:
+  baselineEnabled: true
+  ratchetEnabled: true
+  boyscoutRule: true
+  tddWorkflow: true
