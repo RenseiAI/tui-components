@@ -1,8 +1,12 @@
 # tui-components
 
-OSS shared TUI component library for the AgentFactory and Rensei ecosystem.
+OSS shared TUI component library for the AgentFactory ecosystem.
 
 **Module**: `github.com/RenseiAI/tui-components`
+
+## Boundary
+
+This is an open-source project. It must never contain or reference proprietary platform features, API details, or closed-source concepts. All components must be generic and reusable. Downstream consumers extend these components — this library must remain platform-agnostic.
 
 ## Packages
 
