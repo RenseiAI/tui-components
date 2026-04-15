@@ -1,0 +1,72 @@
+{
+  "folders": [
+    {
+      "path": ".."
+    }
+  ],
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Open Terminals",
+        "command": "${command:terminals.runTerminals}",
+        "type": "process",
+        "runOptions": {
+          "runOn": "folderOpen"
+        }
+      }
+    ]
+  },
+  "settings": {
+    "terminals.autorun": true,
+    "terminals.terminals": [
+      {
+        "name": "Agent Fleet",
+        "color": "terminal.ansiWhite",
+        "icon": "robot",
+        "commands": [
+          "tmux kill-session -t tc-fleet 2>/dev/null; tmux new-session -s tc-fleet 'source .env.local && af-worker-fleet -p TUIComponents; exec zsh'"
+        ]
+      },
+      {
+        "name": "Agent Log Watch",
+        "color": "terminal.ansiWhite",
+        "icon": "search",
+        "commands": [
+          "tmux new-session -A -s tc-logs 'source .env.local && af-analyze-logs --follow; exec zsh'"
+        ],
+        "split": "Agent Fleet"
+      },
+      {
+        "name": "TUI Components Dev",
+        "color": "terminal.ansiYellow",
+        "icon": "sparkle",
+        "commands": [
+          "make test"
+        ]
+      },
+      {
+        "name": "Claude TC #1",
+        "color": "terminal.ansiBrightGreen",
+        "icon": "squirrel",
+        "commands": [
+          "WT=$(git worktree add --detach ../.wt/tc-1 2>/dev/null && echo ../.wt/tc-1 || echo ../.wt/tc-1) && cd $WT && claude --dangerously-skip-permissions"
+        ]
+      },
+      {
+        "name": "Claude TC #2",
+        "color": "terminal.ansiBrightCyan",
+        "icon": "squirrel",
+        "commands": [
+          "WT=$(git worktree add --detach ../.wt/tc-2 2>/dev/null && echo ../.wt/tc-2 || echo ../.wt/tc-2) && cd $WT && claude --dangerously-skip-permissions"
+        ]
+      }
+    ]
+  },
+  "extensions": {
+    "recommendations": [
+      "golang.go",
+      "fabiospampinato.vscode-terminals"
+    ]
+  }
+}
