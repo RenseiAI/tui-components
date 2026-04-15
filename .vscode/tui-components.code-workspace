@@ -25,7 +25,7 @@
         "color": "terminal.ansiWhite",
         "icon": "robot",
         "commands": [
-          "source .env.local && af-worker-fleet -p TUIComponents"
+          "source .env.local && af-worker-fleet -p tui-components"
         ]
       },
       {
@@ -50,7 +50,7 @@
         "color": "terminal.ansiBrightGreen",
         "icon": "squirrel",
         "commands": [
-          "WT=$(git worktree add --detach ../.wt/tc-1 2>/dev/null && echo ../.wt/tc-1 || echo ../.wt/tc-1) && cd $WT && claude --dangerously-skip-permissions"
+          "WT=$(./scripts/create-worktree.sh tc-1) && cd $WT && claude --dangerously-skip-permissions --remote-control"
         ]
       },
       {
@@ -58,7 +58,7 @@
         "color": "terminal.ansiBrightCyan",
         "icon": "squirrel",
         "commands": [
-          "WT=$(git worktree add --detach ../.wt/tc-2 2>/dev/null && echo ../.wt/tc-2 || echo ../.wt/tc-2) && cd $WT && claude --dangerously-skip-permissions"
+          "WT=$(./scripts/create-worktree.sh tc-2) && cd $WT && claude --dangerously-skip-permissions --remote-control"
         ]
       }
     ]
