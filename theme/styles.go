@@ -120,3 +120,41 @@ func ErrorText() lipgloss.Style {
 	return lipgloss.NewStyle().
 		Foreground(StatusError)
 }
+
+// TabActive returns the style for the currently-active tab in a tab bar.
+func TabActive() lipgloss.Style {
+	return lipgloss.NewStyle().
+		Foreground(TextPrimary).
+		Background(SurfaceRaised).
+		Bold(true).
+		Padding(0, 1)
+}
+
+// TabInactive returns the style for inactive tabs in a tab bar.
+func TabInactive() lipgloss.Style {
+	return lipgloss.NewStyle().
+		Foreground(TextSecondary).
+		Padding(0, 1)
+}
+
+// TabDisabled returns the style for disabled tabs in a tab bar.
+// Disabled tabs are rendered with dimmer foreground text than inactive
+// tabs to signal that they cannot be activated.
+func TabDisabled() lipgloss.Style {
+	return lipgloss.NewStyle().
+		Foreground(TextTertiary).
+		Padding(0, 1)
+}
+
+// TabBar returns the background style that wraps an entire tab bar.
+func TabBar() lipgloss.Style {
+	return lipgloss.NewStyle().
+		Background(Surface)
+}
+
+// TabSeparator returns the style for the separator glyph rendered
+// between adjacent tabs in a tab bar.
+func TabSeparator() lipgloss.Style {
+	return lipgloss.NewStyle().
+		Foreground(SurfaceBorder)
+}
