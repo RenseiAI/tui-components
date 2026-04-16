@@ -1,0 +1,15 @@
+[38;2;75;91;128mABCDEFGHIJ background line content here padding text[m
+[38;2;75;91;128mABCDEFGHIJ background line content here padding text[m
+[38;2;75;91;128mABCDEFGHIJ background line content here padding text[m
+[38;2;30;39;64m╭───────────────────────────╮[m
+[38;2;30;39;64m│[m                           [38;2;30;39;64m│[m
+[38;2;30;39;64m│[m  [1;38;2;241;245;249mOverlay[m                  [38;2;30;39;64m│[m
+[38;2;30;39;64m│[m                           [38;2;30;39;64m│[m
+[38;2;30;39;64m│[m  Dialog over background.  [38;2;30;39;64m│[m
+[38;2;30;39;64m│[m                           [38;2;30;39;64m│[m
+[38;2;30;39;64m│[m  [1;7;38;2;124;141;181m Yes [m  [38;2;124;141;181m No [m  [38;2;124;141;181m Cancel [m    [38;2;30;39;64m│[m
+[38;2;30;39;64m│[m                           [38;2;30;39;64m│[m
+[38;2;30;39;64m╰───────────────────────────╯[m
+[38;2;75;91;128mABCDEFGHIJ background line content here padding text[m
+[38;2;75;91;128mABCDEFGHIJ background line content here padding text[m
+[38;2;75;91;128mABCDEFGHIJ background line content here padding text[m
