@@ -113,3 +113,10 @@ func SpinnerStyle() lipgloss.Style {
 	return lipgloss.NewStyle().
 		Foreground(Accent)
 }
+
+// ErrorText returns the style for inline error messages (e.g. validation
+// feedback rendered beneath an input field).
+func ErrorText() lipgloss.Style {
+	return lipgloss.NewStyle().
+		Foreground(StatusError)
+}
