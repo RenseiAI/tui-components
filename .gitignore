@@ -1,6 +1,10 @@
 bin/
+coverage.out
 
 # env files
 .env
 .env.*
 !.env.example
+
+# agent dev artifacts
+.agent/
