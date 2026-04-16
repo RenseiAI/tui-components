@@ -105,3 +105,11 @@ func SectionTitle() lipgloss.Style {
 		Foreground(TextPrimary).
 		Bold(true)
 }
+
+// SpinnerStyle returns the style used for animated spinner frames.
+// The foreground color is the accent color (the natural "active/working"
+// hue in the palette).
+func SpinnerStyle() lipgloss.Style {
+	return lipgloss.NewStyle().
+		Foreground(Accent)
+}
