@@ -227,7 +227,7 @@ func TestIsSelected(t *testing.T) {
 	}
 }
 
-func TestFocusBlur(t *testing.T) {
+func TestSelectFocusBlur(t *testing.T) {
 	t.Parallel()
 
 	s := NewSelect(sampleItems(), WithMultiSelect(true))
