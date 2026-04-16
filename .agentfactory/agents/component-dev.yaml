@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: AgentDefinition
+name: component-dev
+description: Agent for developing TUI widgets, themes, and formatting utilities
+focus:
+  paths:
+    - component/
+    - widget/
+    - theme/
+    - format/
+context:
+  - CLAUDE.md
+preCheck:
+  - go vet ./...
+  - go test ./...
+postCheck:
+  - go build ./...
+instructions: |
+  This is a Go TUI component library built on the Charm v2 ecosystem
+  (bubbletea, lipgloss, bubbles). All widgets implement the component.Component
+  interface (tea.Model + SetSize + Focus + Blur).
+  Widgets are in widget/, themes in theme/, formatting in format/.
+  Tests use _test.go files with snapshot tests in .snapshots/ directories.
+  Use af_code_get_repo_map to orient before starting work, af_code_search_symbols
+  to find type definitions and interface implementations.
+  Before editing files, use af_code_reserve_files to claim them and prevent
+  merge conflicts with other agents. After completing work on files, use
+  af_code_release_files to free them. If reserve reports conflicts, choose
+  alternative files or wait.
