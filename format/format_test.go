@@ -107,3 +107,33 @@ func TestProviderName(t *testing.T) {
 		t.Errorf("ProviderName(nil) = %q, want %q", got, "--")
 	}
 }
+
+func TestTokens(t *testing.T) {
+	ptr := func(n int) *int { return &n }
+
+	tests := []struct {
+		name  string
+		count *int
+		want  string
+	}{
+		{"nil", nil, "--"},
+		{"zero", ptr(0), "0"},
+		{"sub-thousand", ptr(999), "999"},
+		{"exactly 1k", ptr(1000), "1.0k"},
+		{"1.5k", ptr(1500), "1.5k"},
+		{"exactly 1M", ptr(1_000_000), "1.0M"},
+		{"1.5M", ptr(1_500_000), "1.5M"},
+		{"25.5M", ptr(25_500_000), "25.5M"},
+		{"negative small", ptr(-1), "--"},
+		{"negative large", ptr(-100), "--"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := Tokens(tt.count)
+			if got != tt.want {
+				t.Errorf("Tokens(%v) = %q, want %q", tt.count, got, tt.want)
+			}
+		})
+	}
+}

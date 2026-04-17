@@ -89,13 +89,26 @@ func ProviderName(provider *string) string {
 }
 
 // Tokens formats a token count for display.
+//
+// Behavior:
+//   - nil      → "--"
+//   - negative → "--" (token counts are semantically unsigned)
+//   - < 1000            → plain integer, e.g. 999 → "999"
+//   - < 1_000_000       → k-scale with one decimal, e.g. 1500 → "1.5k"
+//   - >= 1_000_000      → M-scale with one decimal, e.g. 1_500_000 → "1.5M"
 func Tokens(count *int) string {
 	if count == nil {
 		return "--"
 	}
 	n := *count
+	if n < 0 {
+		return "--"
+	}
 	if n < 1000 {
 		return fmt.Sprintf("%d", n)
 	}
-	return fmt.Sprintf("%.1fk", float64(n)/1000.0)
+	if n < 1_000_000 {
+		return fmt.Sprintf("%.1fk", float64(n)/1000.0)
+	}
+	return fmt.Sprintf("%.1fM", float64(n)/1_000_000.0)
 }
