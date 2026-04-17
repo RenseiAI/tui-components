@@ -2,6 +2,7 @@ package format
 
 import (
 	"math"
+	"strings"
 	"testing"
 	"time"
 )
@@ -229,12 +230,33 @@ func TestTimestamp(t *testing.T) {
 }
 
 func TestProviderName(t *testing.T) {
-	p := "anthropic"
-	if got := ProviderName(&p); got != "anthropic" {
-		t.Errorf("ProviderName(&%q) = %q, want %q", p, got, "anthropic")
+	// Cases marked "TC-011.6 will revise" document current passthrough
+	// behavior that the follow-up sub-issue will change so that &"" and
+	// whitespace-only pointers return "--" to match nil semantics.
+	empty := ""
+	anthropic := "anthropic"
+	space := " "
+	long := strings.Repeat("a", 256)
+
+	tests := []struct {
+		name     string
+		provider *string
+		want     string
+	}{
+		{"nil", nil, "--"},
+		{"empty string pointer (TC-011.6 will revise to \"--\")", &empty, ""},
+		{"anthropic", &anthropic, "anthropic"},
+		{"single space (TC-011.6 will revise to \"--\")", &space, " "},
+		{"long name 256 chars", &long, long},
 	}
-	if got := ProviderName(nil); got != "--" {
-		t.Errorf("ProviderName(nil) = %q, want %q", got, "--")
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := ProviderName(tt.provider)
+			if got != tt.want {
+				t.Errorf("ProviderName(%v) = %q, want %q", tt.provider, got, tt.want)
+			}
+		})
 	}
 }
 

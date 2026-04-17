@@ -106,7 +106,16 @@ func Timestamp(isoString string) string {
 	return t.Local().Format("3:04:05 PM")
 }
 
-// ProviderName returns a display name for a provider, or "--" if nil.
+// ProviderName returns a display name for a provider.
+//
+// Current behavior:
+//   - nil pointer returns "--".
+//   - Any non-nil pointer is dereferenced and returned as-is, including
+//     the empty string ("") and whitespace-only values (e.g. " ").
+//
+// Note: a future revision (tracked by TC-011.6) will treat empty and
+// whitespace-only pointer values as "--" to match nil semantics, so callers
+// should not rely on empty/whitespace passthrough.
 func ProviderName(provider *string) string {
 	if provider == nil {
 		return "--"
