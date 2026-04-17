@@ -52,6 +52,26 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh release create "$GITHUB_REF_NAME" --notes-file RELEASE_NOTES.md --verify-tag
 
+      - name: Warm proxy cache (list, mod, zip, sumdb)
+        continue-on-error: true
+        shell: bash
+        run: |
+          mod="github.com/!rensei!a!i/tui-components"
+          tag="${GITHUB_REF_NAME}"
+          urls=(
+            "https://proxy.golang.org/${mod}/@v/list"
+            "https://proxy.golang.org/${mod}/@v/${tag}.mod"
+            "https://proxy.golang.org/${mod}/@v/${tag}.zip"
+            "https://sum.golang.org/lookup/github.com/!rensei!a!i/tui-components@${tag}"
+          )
+          for url in "${urls[@]}"; do
+            if curl -fsSL --retry 3 --retry-delay 5 -o /dev/null -w "%{http_code}" "$url"; then
+              echo "OK: $url"
+            else
+              echo "WARN: failed to warm $url (non-fatal)"
+            fi
+          done
+
       - name: Verify module on proxy.golang.org
         shell: bash
         run: |
