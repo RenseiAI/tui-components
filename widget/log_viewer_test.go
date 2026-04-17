@@ -313,6 +313,53 @@ func TestGoldenLongLineWrapOff(t *testing.T) {
 	}
 }
 
+// TestGoldenPlainLongScrolled exercises the mid-buffer scrolled render
+// path: append well over a viewport's worth of short lines, pause
+// follow, move the viewport off the tail, and capture the resulting
+// frame. This is the canonical "reader scrolled back through history"
+// visual.
+func TestGoldenPlainLongScrolled(t *testing.T) {
+	m := New()
+	m.SetSize(80, 24)
+	lines := make([]string, 0, 60)
+	for i := 0; i < 60; i++ {
+		lines = append(lines, "line "+strings.Repeat("x", 4)+" "+itoa3(i))
+	}
+	m.Append(lines...)
+	m.SetFollowing(false)
+	m.viewport.SetYOffset(15)
+	if err := snapshotter().SnapshotMulti("plain_long_scrolled", viewContent(m.View())); err != nil {
+		t.Fatalf("snapshot mismatch: %v", err)
+	}
+}
+
+// TestGoldenTruecolorAnsi locks down the 24-bit RGB SGR path
+// (CSI 38;2;R;G;B m). The existing ansi_coloured golden covers the
+// 16-color path; this one ensures truecolor escapes survive the SGR
+// parser and lipgloss round-trip.
+func TestGoldenTruecolorAnsi(t *testing.T) {
+	m := New()
+	m.SetSize(80, 24)
+	m.Append(
+		"\x1b[38;2;255;128;0mhello\x1b[0m plain tail",
+		"\x1b[1;38;2;64;192;255mbold cyan-ish\x1b[0m",
+		"\x1b[48;2;32;32;32mdark bg\x1b[49m default-bg-again",
+	)
+	if err := snapshotter().SnapshotMulti("truecolor_ansi", viewContent(m.View())); err != nil {
+		t.Fatalf("snapshot mismatch: %v", err)
+	}
+}
+
+// itoa3 formats i as a zero-padded 3-digit decimal string without
+// pulling in strconv/fmt for a hot path.
+func itoa3(i int) string {
+	d := [3]byte{'0', '0', '0'}
+	d[2] = byte('0' + i%10)
+	d[1] = byte('0' + (i/10)%10)
+	d[0] = byte('0' + (i/100)%10)
+	return string(d[:])
+}
+
 // Explicit regression: rendered output of an ANSI-styled line must
 // contain some SGR escape sequence — we don't lose colour on the way
 // through the pipeline.
