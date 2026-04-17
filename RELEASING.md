@@ -89,6 +89,10 @@ Tags published to `proxy.golang.org` are **immutable**. The proxy caches modules
    See [go.dev/ref/mod#go-mod-file-retract](https://go.dev/ref/mod#go-mod-file-retract). Consumers running `go get` will see the retraction and be nudged to a newer version.
 3. Optionally delete the *GitHub Release* (not the tag) if it's actively misleading users. The underlying git tag must stay; `proxy.golang.org` has already fetched it and deleting the tag locally or on GitHub does not remove it from the proxy.
 
+## Proxy cache warming
+
+The release workflow pre-warms the Go module proxy so downstream `go get` is fast from the first call. After creating the GitHub Release and before the hard-fail `.info` verification step, the workflow GETs the `list`, `.mod`, `.zip`, and `sum.golang.org/lookup` endpoints. These warm requests are best-effort (`continue-on-error: true`) — a failure does not block the release.
+
 ## Troubleshooting
 
 **Lint or tests fail in the release workflow.** Same gates as `ci.yml`; fix on `main`, then tag a *later* commit. Do not reuse the version number — the proxy has already attempted to resolve it and caching can produce confusing results.
