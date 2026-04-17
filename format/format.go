@@ -6,6 +6,21 @@ import (
 )
 
 // Duration formats seconds into a human-readable duration string.
+//
+// The input range accepted is any int, including negative values. Current
+// behavior passes negatives through fmt.Sprintf unchanged, so Duration(-30)
+// returns "-30s" and Duration(-3600) returns "-1h". Callers that cannot
+// tolerate negative output should clamp the value before calling.
+//
+// Units scale from seconds to hours: values < 60 render as "%ds", values
+// < 3600 render as "%dm" or "%dm %ds", and values >= 3600 render as "%dh"
+// or "%dh %dm". Day-scale inputs are currently expressed in hours — for
+// example, Duration(86400) returns "24h" and Duration(604800) returns "168h"
+// — because no day unit is emitted.
+//
+// Future versions may clamp negative inputs to "0s" and render day-scale
+// values with an explicit day unit (for example "%dd %dh"); callers should
+// not rely on the current negative or day-scale output.
 func Duration(seconds int) string {
 	if seconds < 60 {
 		return fmt.Sprintf("%ds", seconds)
