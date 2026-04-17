@@ -2,26 +2,26 @@ package format
 
 import (
 	"fmt"
+	"math"
+	"strings"
 	"time"
 )
 
 // Duration formats seconds into a human-readable duration string.
 //
-// The input range accepted is any int, including negative values. Current
-// behavior passes negatives through fmt.Sprintf unchanged, so Duration(-30)
-// returns "-30s" and Duration(-3600) returns "-1h". Callers that cannot
-// tolerate negative output should clamp the value before calling.
+// Negative inputs are clamped to "0s" to match the zero sentinel; callers
+// never see a negative duration in the output.
 //
-// Units scale from seconds to hours: values < 60 render as "%ds", values
-// < 3600 render as "%dm" or "%dm %ds", and values >= 3600 render as "%dh"
-// or "%dh %dm". Day-scale inputs are currently expressed in hours — for
-// example, Duration(86400) returns "24h" and Duration(604800) returns "168h"
-// — because no day unit is emitted.
-//
-// Future versions may clamp negative inputs to "0s" and render day-scale
-// values with an explicit day unit (for example "%dd %dh"); callers should
-// not rely on the current negative or day-scale output.
+// Units scale from seconds up to days:
+//   - values < 60 render as "%ds" (e.g. "30s")
+//   - values < 3600 render as "%dm" or "%dm %ds" (e.g. "5m", "1m 30s")
+//   - values < 86400 render as "%dh" or "%dh %dm" (e.g. "2h", "3h 45m")
+//   - values >= 86400 render as "%dd %dh" (e.g. "1d 0h", "7d 1h"); minutes
+//     are intentionally dropped at day scale.
 func Duration(seconds int) string {
+	if seconds < 0 {
+		return "0s"
+	}
 	if seconds < 60 {
 		return fmt.Sprintf("%ds", seconds)
 	}
@@ -33,37 +33,43 @@ func Duration(seconds int) string {
 		}
 		return fmt.Sprintf("%dm", m)
 	}
-	h := seconds / 3600
-	m := (seconds % 3600) / 60
-	if m > 0 {
-		return fmt.Sprintf("%dh %dm", h, m)
+	if seconds < 86400 {
+		h := seconds / 3600
+		m := (seconds % 3600) / 60
+		if m > 0 {
+			return fmt.Sprintf("%dh %dm", h, m)
+		}
+		return fmt.Sprintf("%dh", h)
 	}
-	return fmt.Sprintf("%dh", h)
+	d := seconds / 86400
+	h := (seconds % 86400) / 3600
+	return fmt.Sprintf("%dd %dh", d, h)
 }
 
 // Cost formats a USD cost value for display.
 //
-// Current behavior:
+// Behavior:
 //   - nil or zero (including -0.0) renders as "--" (treated as missing).
+//   - Negative values render as "--" (costs are unsigned in this domain).
+//   - NaN and ±Inf render as "--" (treated as invalid).
 //   - Values < 0.01 render with four decimal places (e.g. "$0.0050").
 //   - All other values render with two decimal places (e.g. "$3.42").
-//   - Negative values, NaN, and ±Inf are currently passed through to
-//     fmt.Sprintf verbatim. Note that because any negative number is < 0.01,
-//     negatives hit the four-decimal branch (e.g. -3.42 → "$-3.4200"); NaN
-//     and ±Inf render as "$NaN", "$+Inf", "$-Inf".
 //   - Large values are not abbreviated (e.g. 1_000_000.0 → "$1000000.00").
-//
-// Planned revision (TC-011.6): negative, NaN, and ±Inf will render as "--"
-// (treated as invalid/missing), and large values may be abbreviated
-// (e.g. "$1.0M"). Do not rely on the current passthrough behavior.
 func Cost(usd *float64) string {
 	if usd == nil || *usd == 0 {
 		return "--"
 	}
-	if *usd < 0.01 {
-		return fmt.Sprintf("$%.4f", *usd)
+	v := *usd
+	if math.IsNaN(v) || math.IsInf(v, 0) {
+		return "--"
 	}
-	return fmt.Sprintf("$%.2f", *usd)
+	if v < 0 {
+		return "--"
+	}
+	if v < 0.01 {
+		return fmt.Sprintf("$%.4f", v)
+	}
+	return fmt.Sprintf("$%.2f", v)
 }
 
 // now is the clock source used by RelativeTime. It is a package variable
@@ -74,8 +80,14 @@ var now = time.Now
 // RelativeTime formats an ISO 8601 timestamp as a relative time string.
 //
 // If isoString cannot be parsed as RFC 3339, the original input is returned
-// unchanged (passthrough-on-parse-failure). Timestamps in the future (diff < 0)
-// render as "just now".
+// unchanged (passthrough-on-parse-failure). Timestamps in the future (where
+// the parsed time is after now) collapse to "just now".
+//
+// Past timestamps bucket into minute/hour/day scales:
+//   - diff < 1m  → "just now"
+//   - diff < 1h  → "%dm ago"
+//   - diff < 24h → "%dh ago"
+//   - otherwise  → "%dd ago"
 func RelativeTime(isoString string) string {
 	t, err := time.Parse(time.RFC3339, isoString)
 	if err != nil {
@@ -108,16 +120,18 @@ func Timestamp(isoString string) string {
 
 // ProviderName returns a display name for a provider.
 //
-// Current behavior:
+// Behavior:
 //   - nil pointer returns "--".
-//   - Any non-nil pointer is dereferenced and returned as-is, including
-//     the empty string ("") and whitespace-only values (e.g. " ").
-//
-// Note: a future revision (tracked by TC-011.6) will treat empty and
-// whitespace-only pointer values as "--" to match nil semantics, so callers
-// should not rely on empty/whitespace passthrough.
+//   - A pointer to the empty string ("") returns "--".
+//   - A pointer to a whitespace-only string (e.g. " ", "\t") returns "--".
+//   - Any other non-nil pointer is dereferenced and returned verbatim
+//     (including surrounding content — only the purely whitespace case is
+//     collapsed to the missing sentinel).
 func ProviderName(provider *string) string {
 	if provider == nil {
+		return "--"
+	}
+	if strings.TrimSpace(*provider) == "" {
 		return "--"
 	}
 	return *provider

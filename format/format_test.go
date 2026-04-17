@@ -44,37 +44,27 @@ func TestDuration(t *testing.T) {
 	}
 }
 
-// TestDurationEdgeCases locks in the CURRENT behavior of Duration for
-// negative inputs and day-scale values. These expectations intentionally
-// mirror what the implementation produces today so the suite stays green.
-//
-// NOTE: sibling roll-up TC-011.6 (REN-126) is expected to change the
-// implementation to:
-//   - clamp negative inputs to "0s"
-//   - render day-scale values with a day unit, e.g. "%dd %dh"
-//
-// When that roll-up lands it will need to update the "want" column for every
-// case tagged below with a "TC-011.6" comment.
+// TestDurationEdgeCases locks in the ratified behavior of Duration for
+// negative inputs and day-scale values:
+//   - negatives clamp to "0s"
+//   - day-scale (>= 86400s) renders as "%dd %dh", dropping minutes
 func TestDurationEdgeCases(t *testing.T) {
 	tests := []struct {
 		name    string
 		seconds int
 		want    string
 	}{
-		// Negatives — all land in the `seconds < 60` branch and pass through
-		// fmt.Sprintf("%ds", ...) unchanged today.
-		// TC-011.6 will revise each of these to "0s".
-		{"negative_one_second", -1, "-1s"},              // TC-011.6: "0s"
-		{"negative_just_under_minute", -59, "-59s"},     // TC-011.6: "0s"
-		{"negative_one_minute_boundary", -60, "-60s"},   // TC-011.6: "0s"
-		{"negative_one_hour_boundary", -3600, "-3600s"}, // TC-011.6: "0s"
+		// Negatives clamp to "0s".
+		{"negative_one_second", -1, "0s"},
+		{"negative_just_under_minute", -59, "0s"},
+		{"negative_one_minute_boundary", -60, "0s"},
+		{"negative_one_hour_boundary", -3600, "0s"},
 
-		// Day-scale — expressed as hours today because no day unit exists.
-		// TC-011.6 will revise each of these to a "%dd %dh" (or "%dd") form.
-		{"one_day", 86400, "24h"},                                   // TC-011.6: "1d"
-		{"two_days", 172800, "48h"},                                 // TC-011.6: "2d"
-		{"one_week", 604800, "168h"},                                // TC-011.6: "7d"
-		{"week_plus_hour_minute_second", 7*86400 + 3723, "169h 2m"}, // TC-011.6: "7d 1h 2m"
+		// Day-scale — "%dd %dh", minutes dropped.
+		{"one_day", 86400, "1d 0h"},
+		{"two_days", 172800, "2d 0h"},
+		{"one_week", 604800, "7d 0h"},
+		{"week_plus_hour_minute_second", 7*86400 + 3723, "7d 1h"},
 	}
 
 	for _, tt := range tests {
@@ -113,16 +103,11 @@ func TestCost(t *testing.T) {
 	}
 }
 
-// TestCostEdgeCases asserts the CURRENT behavior of Cost for edge-case inputs
-// (REN-985 / TC-011.4). These tests document today's behavior so the follow-up
-// roll-up sub-issue (TC-011.6) can revise them intentionally.
-//
-// TC-011.6 will revise the following cases:
-//   - math.NaN()     → "--"  (currently "$NaN")
-//   - math.Inf(+1)   → "--"  (currently "$+Inf")
-//   - math.Inf(-1)   → "--"  (currently "$-Inf")
-//   - negative (e.g. -3.42) → "--" (currently passthrough "$-3.42")
-//   - 1_000_000.0    → possibly "$1.0M" (TBD in .6; currently "$1000000.00")
+// TestCostEdgeCases asserts the ratified behavior of Cost for edge-case
+// inputs (REN-985 / TC-011.6):
+//   - negative values, NaN, and ±Inf all render as "--"
+//   - the million-dollar abbreviation was deferred; 1_000_000.0 still
+//     renders with two decimal places as "$1000000.00"
 func TestCostEdgeCases(t *testing.T) {
 	negZero := math.Copysign(0, -1)
 	neg := -3.42
@@ -140,13 +125,11 @@ func TestCostEdgeCases(t *testing.T) {
 		{"nil", nil, "--"},
 		{"positive zero", func() *float64 { z := 0.0; return &z }(), "--"},
 		{"negative zero", &negZero, "--"},
-		// Negative values are < 0.01, so they currently hit the four-decimal
-		// branch and render with four decimal places.
-		{"negative passthrough", &neg, "$-3.4200"},
-		{"NaN passthrough (slated to become --)", &nan, "$NaN"},
-		{"positive infinity passthrough (slated to become --)", &posInf, "$+Inf"},
-		{"negative infinity passthrough (slated to become --)", &negInf, "$-Inf"},
-		{"million (no abbreviation today)", &million, "$1000000.00"},
+		{"negative", &neg, "--"},
+		{"NaN", &nan, "--"},
+		{"positive infinity", &posInf, "--"},
+		{"negative infinity", &negInf, "--"},
+		{"million (no abbreviation)", &million, "$1000000.00"},
 		{"below four-decimal threshold", &tiny, "$0.0000"},
 	}
 
@@ -230,9 +213,9 @@ func TestTimestamp(t *testing.T) {
 }
 
 func TestProviderName(t *testing.T) {
-	// Cases marked "TC-011.6 will revise" document current passthrough
-	// behavior that the follow-up sub-issue will change so that &"" and
-	// whitespace-only pointers return "--" to match nil semantics.
+	// Ratified behavior (TC-011.6): nil, empty-string, and whitespace-only
+	// pointer values all render as "--". Non-blank strings pass through
+	// verbatim regardless of length.
 	empty := ""
 	anthropic := "anthropic"
 	space := " "
@@ -244,9 +227,9 @@ func TestProviderName(t *testing.T) {
 		want     string
 	}{
 		{"nil", nil, "--"},
-		{"empty string pointer (TC-011.6 will revise to \"--\")", &empty, ""},
+		{"empty string pointer", &empty, "--"},
 		{"anthropic", &anthropic, "anthropic"},
-		{"single space (TC-011.6 will revise to \"--\")", &space, " "},
+		{"single space", &space, "--"},
 		{"long name 256 chars", &long, long},
 	}
 
