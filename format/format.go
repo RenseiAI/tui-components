@@ -52,13 +52,22 @@ func Cost(usd *float64) string {
 	return fmt.Sprintf("$%.2f", *usd)
 }
 
+// now is the clock source used by RelativeTime. It is a package variable
+// solely so tests can substitute a fixed clock for deterministic assertions;
+// production code should not reassign it.
+var now = time.Now
+
 // RelativeTime formats an ISO 8601 timestamp as a relative time string.
+//
+// If isoString cannot be parsed as RFC 3339, the original input is returned
+// unchanged (passthrough-on-parse-failure). Timestamps in the future (diff < 0)
+// render as "just now".
 func RelativeTime(isoString string) string {
 	t, err := time.Parse(time.RFC3339, isoString)
 	if err != nil {
 		return isoString
 	}
-	diff := time.Since(t)
+	diff := now().Sub(t)
 	switch {
 	case diff < time.Minute:
 		return "just now"
@@ -72,6 +81,9 @@ func RelativeTime(isoString string) string {
 }
 
 // Timestamp formats an ISO 8601 string to local time display.
+//
+// If isoString cannot be parsed as RFC 3339, the original input is returned
+// unchanged (passthrough-on-parse-failure).
 func Timestamp(isoString string) string {
 	t, err := time.Parse(time.RFC3339, isoString)
 	if err != nil {
