@@ -1,0 +1,25 @@
+{
+  "updatedAt": 1776450744060,
+  "items": [
+    {
+      "content": "Write theme/status_test.go",
+      "activeForm": "Writing theme/status_test.go",
+      "status": "completed"
+    },
+    {
+      "content": "Write theme/worktype_test.go",
+      "activeForm": "Writing theme/worktype_test.go",
+      "status": "completed"
+    },
+    {
+      "content": "Write theme/activity_test.go",
+      "activeForm": "Writing theme/activity_test.go",
+      "status": "completed"
+    },
+    {
+      "content": "Run make test, lint, coverage",
+      "activeForm": "Running make test, lint, coverage",
+      "status": "completed"
+    }
+  ]
+}
