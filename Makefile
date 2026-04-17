@@ -1,4 +1,4 @@
-.PHONY: build test lint fmt vuln coverage clean
+.PHONY: build test lint fmt vuln coverage check-examples clean
 
 build:
 	go build ./...
@@ -18,6 +18,9 @@ vuln:
 coverage:
 	go test -race -coverprofile=coverage.out ./...
 	go tool cover -func=coverage.out
+
+check-examples:
+	go test -race -run TestExportedSymbolsHaveExamples ./internal/examplecheck/...
 
 clean:
 	rm -f coverage.out

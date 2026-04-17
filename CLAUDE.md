@@ -48,6 +48,7 @@ make coverage   # test with coverage report
 - **Linting**: `golangci-lint` with govet, staticcheck, gofumpt, errcheck, gosec, gocritic, revive.
 - **Status strings**: Use plain strings (not typed enums) to avoid import cycles.
 - **Widgets**: Wrap Bubbles v2 components where applicable. Accept Bubbles options for customization. Implement `Component` interface. Read colors from `theme/` — no hardcoded colors.
+- **Examples**: Godoc `Example*` tests live in `example_test.go` (one per package), declared with `package <pkg>` — same package as the code under test so examples exercise intra-package usage. Use `// Output:` on deterministic examples and `// Unordered output:` where map iteration is involved. Non-deterministic examples (wall-clock, locale) are compile-only with no output comment. Lipgloss-rendered examples omit `// Output:` (ANSI bytes differ across terminals). Use `fmt.Println` only — no `charmbracelet/log` in examples. No hardcoded colors — read from `theme/`.
 - **Stability**: No breaking changes within a minor version.
 
 ## Project Layout
