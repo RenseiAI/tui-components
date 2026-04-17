@@ -33,10 +33,12 @@ func keyPress(s string) tea.KeyPressMsg {
 
 // fillFollowing primes a LogViewer such that it is following and has
 // more lines than the viewport can show. The returned viewer has size
-// 20x6 (5 content rows + 1 footer row) and 30 lines appended.
+// 20x6 (5 content rows + 1 footer row), is focused so key dispatch is
+// live, and has 30 lines appended.
 func fillFollowing(t *testing.T) *LogViewer {
 	t.Helper()
 	m := New()
+	m.Focus()
 	m.SetSize(20, 6)
 	for i := 0; i < 30; i++ {
 		m.Append("line")

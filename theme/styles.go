@@ -174,3 +174,21 @@ func LogFollow() lipgloss.Style {
 func LogPaused() lipgloss.Style {
 	return StatValueAccent().Padding(0, 1)
 }
+
+// LogFooterRow returns the base style used to pad the LogViewer footer
+// row to the full widget width. It carries no colour of its own (the
+// badge inside supplies the colour) but keeps the theme-layer
+// indirection so no raw lipgloss.NewStyle() call leaks into the widget
+// package.
+func LogFooterRow() lipgloss.Style {
+	return lipgloss.NewStyle()
+}
+
+// LogBody returns the base style applied to the LogViewer's rendered
+// buffer content (the region above the footer). Currently the style is
+// a bare [lipgloss.Style]: content inherits its colour from the SGR
+// parser's per-run styles. The indirection keeps the widget package
+// free of raw lipgloss constructors.
+func LogBody() lipgloss.Style {
+	return lipgloss.NewStyle()
+}

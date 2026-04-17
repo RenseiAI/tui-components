@@ -3,9 +3,9 @@ package widget
 import (
 	"strings"
 
+	"charm.land/bubbles/v2/key"
 	"charm.land/bubbles/v2/viewport"
 	tea "charm.land/bubbletea/v2"
-	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/log"
 
 	"github.com/RenseiAI/tui-components/component"
@@ -23,6 +23,87 @@ const footerRows = 1
 // Compile-time assertion that *LogViewer satisfies component.Component.
 var _ component.Component = (*LogViewer)(nil)
 
+// KeyMap defines the key bindings used by LogViewer. Consumers can
+// rebind any action by constructing a new KeyMap and passing it via
+// [WithKeyMap].
+//
+// Each binding carries its own help text (see [key.WithHelp]) so a
+// future help-bar integration can surface the active bindings without
+// needing a separate metadata table.
+type KeyMap struct {
+	// LineUp scrolls the viewport up by one line and pauses follow.
+	LineUp key.Binding
+	// LineDown scrolls the viewport down by one line.
+	LineDown key.Binding
+	// PageUp scrolls the viewport up by one page and pauses follow.
+	PageUp key.Binding
+	// PageDown scrolls the viewport down by one page.
+	PageDown key.Binding
+	// Home jumps to the top of the buffer and pauses follow.
+	Home key.Binding
+	// End jumps to the tail and re-engages follow.
+	End key.Binding
+	// ToggleFollow flips follow mode. Turning follow on jumps to the
+	// tail.
+	ToggleFollow key.Binding
+	// ToggleWrap flips soft-wrap rendering.
+	ToggleWrap key.Binding
+	// Clear drops every retained line and resets the SGR parser.
+	Clear key.Binding
+}
+
+// DefaultKeyMap returns the default key bindings for LogViewer:
+//
+//	LineUp:       up, k
+//	LineDown:     down, j
+//	PageUp:       pgup
+//	PageDown:     pgdn
+//	Home:         home, g
+//	End:          end, G
+//	ToggleFollow: f
+//	ToggleWrap:   w
+//	Clear:        c
+func DefaultKeyMap() KeyMap {
+	return KeyMap{
+		LineUp: key.NewBinding(
+			key.WithKeys("up", "k"),
+			key.WithHelp("↑/k", "scroll up"),
+		),
+		LineDown: key.NewBinding(
+			key.WithKeys("down", "j"),
+			key.WithHelp("↓/j", "scroll down"),
+		),
+		PageUp: key.NewBinding(
+			key.WithKeys("pgup"),
+			key.WithHelp("pgup", "page up"),
+		),
+		PageDown: key.NewBinding(
+			key.WithKeys("pgdown"),
+			key.WithHelp("pgdn", "page down"),
+		),
+		Home: key.NewBinding(
+			key.WithKeys("home", "g"),
+			key.WithHelp("home/g", "go to top"),
+		),
+		End: key.NewBinding(
+			key.WithKeys("end", "G"),
+			key.WithHelp("end/G", "go to tail (follow)"),
+		),
+		ToggleFollow: key.NewBinding(
+			key.WithKeys("f"),
+			key.WithHelp("f", "toggle follow"),
+		),
+		ToggleWrap: key.NewBinding(
+			key.WithKeys("w"),
+			key.WithHelp("w", "toggle wrap"),
+		),
+		Clear: key.NewBinding(
+			key.WithKeys("c"),
+			key.WithHelp("c", "clear buffer"),
+		),
+	}
+}
+
 // LogViewer is a Bubble Tea widget that renders a stream of log lines
 // inside a scrollable viewport. Lines are retained in a ring buffer
 // (bounded by WithMaxLines) and rendered with ANSI SGR styling via the
@@ -32,9 +113,15 @@ var _ component.Component = (*LogViewer)(nil)
 // Following() is true, each [LogViewer.Append] auto-scrolls the
 // viewport to the tail; otherwise the viewport offset is preserved so
 // the user can read history without being yanked forward by new
-// output. Explicit scroll-away keys ([up], [k], [pgup], [home], [g])
-// and mouse-wheel-up events flip follow off; [end] / [G] re-engages
-// and jumps to the tail; [f] toggles.
+// output. The bindings in [KeyMap] drive the transitions (LineUp /
+// PageUp / Home pause follow; End re-engages; ToggleFollow toggles);
+// a mouse-wheel-up event also pauses follow.
+//
+// Key dispatch is gated on focus: a blurred LogViewer drops
+// [tea.KeyPressMsg] messages but still processes [AppendMsg], mouse
+// events, and [tea.WindowSizeMsg] so background producers keep
+// delivering data regardless of which widget currently owns the focus
+// ring.
 //
 // The footer row below the viewport shows a short indicator rendered
 // via [theme.LogFollow] / [theme.LogPaused]. The viewport itself is
@@ -45,6 +132,7 @@ var _ component.Component = (*LogViewer)(nil)
 type LogViewer struct {
 	viewport viewport.Model
 	parser   *sgrParser
+	keys     KeyMap
 
 	lines    []string
 	maxLines int
@@ -91,14 +179,24 @@ func WithFollow(enabled bool) Option {
 	}
 }
 
+// WithKeyMap overrides the default key bindings. Any unset fields on
+// the supplied map disable the corresponding action (an empty
+// [key.Binding] matches nothing).
+func WithKeyMap(km KeyMap) Option {
+	return func(m *LogViewer) {
+		m.keys = km
+	}
+}
+
 // New constructs a LogViewer with the given options applied on top of
-// the defaults (maxLines=10_000, wrap=true, follow=true).
+// the defaults (maxLines=10_000, wrap=true, follow=true, KeyMap=DefaultKeyMap).
 func New(opts ...Option) *LogViewer {
 	m := &LogViewer{
 		parser:   newSGRParser(),
 		maxLines: defaultMaxLines,
 		wrap:     true,
 		follow:   true,
+		keys:     DefaultKeyMap(),
 	}
 	for _, opt := range opts {
 		opt(m)
@@ -179,31 +277,33 @@ func (m *LogViewer) SetFollowing(enabled bool) {
 	}
 }
 
+// Wrap reports whether soft-wrap rendering is currently enabled.
+func (m *LogViewer) Wrap() bool {
+	return m.wrap
+}
+
+// SetWrap toggles soft-wrap rendering and re-renders so the new
+// wrapping takes effect on the current buffer.
+func (m *LogViewer) SetWrap(enabled bool) {
+	m.wrap = enabled
+	m.viewport.SoftWrap = enabled
+	m.refresh()
+}
+
 // Init satisfies tea.Model. LogViewer produces no initial commands.
 func (m *LogViewer) Init() tea.Cmd {
 	return nil
 }
 
-// scrollAwayKeys returns the set of key strings that, when received,
-// flip follow off and scroll the viewport by one step. REN-997 will
-// replace this hard-coded set with a configurable KeyMap; until then
-// it is kept internal so the public surface can evolve without a
-// breaking change.
-func scrollAwayKeys() []string {
-	return []string{"up", "k", "pgup", "home", "g"}
-}
-
-// scrollToTailKeys returns the set of key strings that re-engage
-// follow and jump to the tail. Like scrollAwayKeys, this is a
-// placeholder to be folded into REN-997's KeyMap.
-func scrollToTailKeys() []string {
-	return []string{"end", "G"}
-}
-
-// Update handles AppendMsg, WindowSizeMsg, and the internal
-// scroll-away / scroll-to-tail / toggle key set. All other messages
-// are dropped. REN-997 will replace the hard-coded key matching with
-// a KeyMap and gate dispatch on focus.
+// Update handles AppendMsg, WindowSizeMsg, focus-gated KeyPressMsg via
+// the configured [KeyMap], and MouseWheelMsg. All other messages are
+// dropped.
+//
+// Key dispatch is gated on focus: when the widget is blurred, a
+// [tea.KeyPressMsg] is dropped without effect. Non-key messages
+// (AppendMsg, WindowSizeMsg, MouseWheelMsg) are always processed so
+// background producers and the program loop keep working regardless
+// of which widget currently owns the focus ring.
 func (m *LogViewer) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case AppendMsg:
@@ -213,6 +313,9 @@ func (m *LogViewer) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.SetSize(msg.Width, msg.Height)
 		return m, nil
 	case tea.KeyPressMsg:
+		if !m.focused {
+			return m, nil
+		}
 		return m.handleKey(msg)
 	case tea.MouseWheelMsg:
 		return m.handleMouseWheel(msg)
@@ -220,40 +323,61 @@ func (m *LogViewer) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-// handleKey dispatches a key press through the state machine. Any key
-// that lies in scrollAwayKeys pauses follow and scrolls the viewport;
-// scrollToTailKeys re-engages follow and jumps to the tail; "f"
-// toggles. After the handler returns, if the viewport is no longer at
-// the bottom, follow is flipped off (covers keys that the viewport's
-// own KeyMap handles, e.g. half-page up).
+// handleKey matches the pressed key against the configured [KeyMap]
+// and applies the corresponding action. LineUp / PageUp / Home pause
+// follow and delegate to the viewport; LineDown / PageDown delegate
+// without altering follow; End re-engages follow and jumps to the
+// tail; ToggleFollow / ToggleWrap flip the respective fields; Clear
+// empties the buffer.
+//
+// A key that doesn't match any binding falls through to the viewport
+// so unmapped motions (e.g. the viewport's own half-page bindings)
+// keep working. After such a delegation, if the viewport lifts off
+// the tail, follow is flipped off; landing on the tail does NOT
+// re-engage follow (only the explicit End / ToggleFollow actions do).
 func (m *LogViewer) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
-	s := msg.String()
-
-	switch s {
-	case "f":
+	switch {
+	case key.Matches(msg, m.keys.ToggleFollow):
 		m.SetFollowing(!m.follow)
+		return m, nil
+	case key.Matches(msg, m.keys.ToggleWrap):
+		m.SetWrap(!m.wrap)
+		return m, nil
+	case key.Matches(msg, m.keys.Clear):
+		m.Clear()
+		return m, nil
+	case key.Matches(msg, m.keys.End):
+		m.SetFollowing(true)
+		return m, nil
+	case key.Matches(msg, m.keys.Home):
+		m.follow = false
+		m.viewport.GotoTop()
+		return m, nil
+	case key.Matches(msg, m.keys.PageUp):
+		m.follow = false
+		m.viewport.PageUp()
+		return m, nil
+	case key.Matches(msg, m.keys.PageDown):
+		m.viewport.PageDown()
+		if !m.viewport.AtBottom() {
+			m.follow = false
+		}
+		return m, nil
+	case key.Matches(msg, m.keys.LineUp):
+		m.follow = false
+		m.viewport.ScrollUp(1)
+		return m, nil
+	case key.Matches(msg, m.keys.LineDown):
+		m.viewport.ScrollDown(1)
+		if !m.viewport.AtBottom() {
+			m.follow = false
+		}
 		return m, nil
 	}
 
-	for _, k := range scrollToTailKeys() {
-		if s == k {
-			m.SetFollowing(true)
-			return m, nil
-		}
-	}
-
-	for _, k := range scrollAwayKeys() {
-		if s == k {
-			m.follow = false
-			m.viewport.ScrollUp(1)
-			return m, nil
-		}
-	}
-
-	// Delegate any other key to the viewport (e.g. page-down, down).
-	// If the viewport moves off the tail we flip follow off; if it
-	// lands on the tail we do NOT flip follow on — only the explicit
-	// scrollToTailKeys and SetFollowing(true) re-engage tailing.
+	// Unmapped key: delegate to the viewport so its own KeyMap (e.g.
+	// half-page up/down) still works. Pause follow if the viewport
+	// moves off the tail; do NOT re-engage follow on tail landings.
 	vp, cmd := m.viewport.Update(msg)
 	m.viewport = vp
 	if !m.viewport.AtBottom() {
@@ -289,7 +413,7 @@ func (m *LogViewer) View() tea.View {
 	// Pad the footer row to the full width so composite layouts don't
 	// see ragged edges.
 	if m.width > 0 {
-		footer = lipgloss.NewStyle().Width(m.width).Render(footer)
+		footer = theme.LogFooterRow().Width(m.width).Render(footer)
 	}
 
 	var b strings.Builder
@@ -332,20 +456,35 @@ func (m *LogViewer) SetSize(width, height int) {
 	}
 }
 
-// Focus flips the internal focused flag. The full focus-gated dispatch
-// lands in REN-997; until then Focus is a no-op stub.
+// Focus marks the widget as owning the focus ring. Subsequent
+// [tea.KeyPressMsg] messages will be dispatched through the configured
+// [KeyMap]; non-key messages are unaffected by focus.
 func (m *LogViewer) Focus() {
 	m.focused = true
 }
 
-// Blur flips the internal focused flag. See Focus for context.
+// Blur clears the focus flag. Subsequent [tea.KeyPressMsg] messages
+// are dropped until Focus is called again. Non-key messages (appends,
+// resizes, mouse wheel) are still processed.
 func (m *LogViewer) Blur() {
 	m.focused = false
 }
 
+// Focused reports whether the widget currently owns the focus ring.
+func (m *LogViewer) Focused() bool {
+	return m.focused
+}
+
+// KeyMap returns a copy of the widget's active key bindings. Useful
+// for help-bar integrations that want to enumerate what's currently
+// bound.
+func (m *LogViewer) KeyMap() KeyMap {
+	return m.keys
+}
+
 // refresh re-renders the retained lines into the viewport. Called on
 // every mutation that affects on-screen content (Append, Clear,
-// SetSize).
+// SetSize, SetWrap).
 func (m *LogViewer) refresh() {
 	content := m.render()
 	m.viewport.SetContent(content)
@@ -374,10 +513,10 @@ func (m *LogViewer) render() string {
 	m.parser.Reset()
 
 	var (
-		out       strings.Builder
-		lineBuf   strings.Builder
-		wrapStyle = lipgloss.NewStyle()
+		out     strings.Builder
+		lineBuf strings.Builder
 	)
+	wrapStyle := theme.LogBody()
 	if m.wrap && m.width > 0 {
 		wrapStyle = wrapStyle.Width(m.width)
 	}
