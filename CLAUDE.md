@@ -58,3 +58,7 @@ format/         Formatting utilities with tests
 component/      Component interface definition
 widget/         Shared Bubble Tea widget models (extend Bubbles v2)
 ```
+
+## Worktrees
+
+- `.claude/settings.json` registers a `SessionStart` hook running `scripts/refresh-worktree.sh` — auto-rebases and refreshes deps on linked worktrees only.
