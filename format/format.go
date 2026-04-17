@@ -42,6 +42,20 @@ func Duration(seconds int) string {
 }
 
 // Cost formats a USD cost value for display.
+//
+// Current behavior:
+//   - nil or zero (including -0.0) renders as "--" (treated as missing).
+//   - Values < 0.01 render with four decimal places (e.g. "$0.0050").
+//   - All other values render with two decimal places (e.g. "$3.42").
+//   - Negative values, NaN, and ±Inf are currently passed through to
+//     fmt.Sprintf verbatim. Note that because any negative number is < 0.01,
+//     negatives hit the four-decimal branch (e.g. -3.42 → "$-3.4200"); NaN
+//     and ±Inf render as "$NaN", "$+Inf", "$-Inf".
+//   - Large values are not abbreviated (e.g. 1_000_000.0 → "$1000000.00").
+//
+// Planned revision (TC-011.6): negative, NaN, and ±Inf will render as "--"
+// (treated as invalid/missing), and large values may be abbreviated
+// (e.g. "$1.0M"). Do not rely on the current passthrough behavior.
 func Cost(usd *float64) string {
 	if usd == nil || *usd == 0 {
 		return "--"
