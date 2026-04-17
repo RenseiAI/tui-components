@@ -15,7 +15,7 @@ import (
 // according to the active profile), so the example asserts only the
 // row count, which is a stable function of the widget height.
 func Example_logViewer() {
-	lv := widget.New(widget.WithMaxLines(100))
+	lv := widget.NewLogViewer(widget.WithMaxLines(100))
 	lv.SetSize(40, 6)
 	lv.Append("hello", "world")
 

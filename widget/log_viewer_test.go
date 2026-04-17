@@ -8,11 +8,11 @@ import (
 	"github.com/bradleyjkemp/cupaloy/v2"
 )
 
-// snapshotter returns a cupaloy config pinned at widget/.snapshots.
+// logViewerSnapshotter returns a cupaloy config pinned at widget/.snapshots.
 // Defaults preserve cupaloy's env-driven behaviour: when
 // UPDATE_SNAPSHOTS=true, missing snapshots are created and existing
 // ones overwritten; otherwise mismatches fail the test.
-func snapshotter() *cupaloy.Config {
+func logViewerSnapshotter() *cupaloy.Config {
 	return cupaloy.New(
 		cupaloy.SnapshotSubdirectory(".snapshots"),
 		cupaloy.EnvVariableName("UPDATE_SNAPSHOTS"),
@@ -26,7 +26,7 @@ func viewContent(v tea.View) string {
 }
 
 func TestNewDefaults(t *testing.T) {
-	m := New()
+	m := NewLogViewer()
 	if m.maxLines != defaultMaxLines {
 		t.Errorf("default maxLines: want %d, got %d", defaultMaxLines, m.maxLines)
 	}
@@ -44,12 +44,12 @@ func TestNewDefaults(t *testing.T) {
 func TestOptions(t *testing.T) {
 	tests := []struct {
 		name string
-		opts []Option
+		opts []LogViewerOption
 		want func(t *testing.T, m *LogViewer)
 	}{
 		{
 			name: "with max lines",
-			opts: []Option{WithMaxLines(50)},
+			opts: []LogViewerOption{WithMaxLines(50)},
 			want: func(t *testing.T, m *LogViewer) {
 				t.Helper()
 				if m.maxLines != 50 {
@@ -59,7 +59,7 @@ func TestOptions(t *testing.T) {
 		},
 		{
 			name: "with max lines zero means unbounded",
-			opts: []Option{WithMaxLines(0)},
+			opts: []LogViewerOption{WithMaxLines(0)},
 			want: func(t *testing.T, m *LogViewer) {
 				t.Helper()
 				if m.maxLines != 0 {
@@ -69,7 +69,7 @@ func TestOptions(t *testing.T) {
 		},
 		{
 			name: "with max lines negative falls back to default",
-			opts: []Option{WithMaxLines(-5)},
+			opts: []LogViewerOption{WithMaxLines(-5)},
 			want: func(t *testing.T, m *LogViewer) {
 				t.Helper()
 				if m.maxLines != defaultMaxLines {
@@ -79,7 +79,7 @@ func TestOptions(t *testing.T) {
 		},
 		{
 			name: "with wrap off",
-			opts: []Option{WithWrap(false)},
+			opts: []LogViewerOption{WithWrap(false)},
 			want: func(t *testing.T, m *LogViewer) {
 				t.Helper()
 				if m.wrap {
@@ -89,7 +89,7 @@ func TestOptions(t *testing.T) {
 		},
 		{
 			name: "with follow off",
-			opts: []Option{WithFollow(false)},
+			opts: []LogViewerOption{WithFollow(false)},
 			want: func(t *testing.T, m *LogViewer) {
 				t.Helper()
 				if m.follow {
@@ -100,14 +100,14 @@ func TestOptions(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			m := New(tc.opts...)
+			m := NewLogViewer(tc.opts...)
 			tc.want(t, m)
 		})
 	}
 }
 
 func TestAppendThenClear(t *testing.T) {
-	m := New()
+	m := NewLogViewer()
 	m.SetSize(80, 24)
 	m.Append("one", "two", "three")
 	if len(m.lines) != 3 {
@@ -125,7 +125,7 @@ func TestAppendThenClear(t *testing.T) {
 }
 
 func TestRingOverflow(t *testing.T) {
-	m := New(WithMaxLines(3))
+	m := NewLogViewer(WithMaxLines(3))
 	m.SetSize(80, 24)
 	m.Append("a", "b", "c", "d", "e")
 	if len(m.lines) != 3 {
@@ -140,7 +140,7 @@ func TestRingOverflow(t *testing.T) {
 }
 
 func TestRingUnbounded(t *testing.T) {
-	m := New(WithMaxLines(0))
+	m := NewLogViewer(WithMaxLines(0))
 	for i := 0; i < 20; i++ {
 		m.Append("x")
 	}
@@ -150,7 +150,7 @@ func TestRingUnbounded(t *testing.T) {
 }
 
 func TestAppendMsgViaUpdate(t *testing.T) {
-	m := New()
+	m := NewLogViewer()
 	m.SetSize(80, 24)
 	updated, cmd := m.Update(AppendMsg{Lines: []string{"alpha", "beta"}})
 	if cmd != nil {
@@ -166,7 +166,7 @@ func TestAppendMsgViaUpdate(t *testing.T) {
 }
 
 func TestUpdateIgnoresOtherMessages(t *testing.T) {
-	m := New()
+	m := NewLogViewer()
 	m.SetSize(80, 24)
 	m.Append("before")
 	before := len(m.lines)
@@ -177,7 +177,7 @@ func TestUpdateIgnoresOtherMessages(t *testing.T) {
 }
 
 func TestUpdateHandlesWindowSize(t *testing.T) {
-	m := New()
+	m := NewLogViewer()
 	_, _ = m.Update(tea.WindowSizeMsg{Width: 40, Height: 10})
 	if m.width != 40 || m.height != 10 {
 		t.Errorf("WindowSizeMsg not propagated: want 40x10, got %dx%d", m.width, m.height)
@@ -185,7 +185,7 @@ func TestUpdateHandlesWindowSize(t *testing.T) {
 }
 
 func TestFollowingGetterSetter(t *testing.T) {
-	m := New(WithFollow(false))
+	m := NewLogViewer(WithFollow(false))
 	if m.Following() {
 		t.Error("Following(): want false after WithFollow(false)")
 	}
@@ -200,7 +200,7 @@ func TestFollowScrollBehaviour(t *testing.T) {
 	//  - with follow on, viewport ends at the bottom.
 	//  - with follow off, viewport stays at its prior offset after a
 	//    subsequent append.
-	m := New()
+	m := NewLogViewer()
 	m.SetSize(20, 5)
 	for i := 0; i < 30; i++ {
 		m.Append("line")
@@ -237,7 +237,7 @@ func TestFollowScrollBehaviour(t *testing.T) {
 }
 
 func TestFocusBlurStubs(t *testing.T) {
-	m := New()
+	m := NewLogViewer()
 	m.Focus()
 	if !m.focused {
 		t.Error("Focus() did not set internal flag")
@@ -249,7 +249,7 @@ func TestFocusBlurStubs(t *testing.T) {
 }
 
 func TestAppendNoOpOnEmpty(t *testing.T) {
-	m := New()
+	m := NewLogViewer()
 	m.SetSize(80, 24)
 	m.Append()
 	if len(m.lines) != 0 {
@@ -260,55 +260,55 @@ func TestAppendNoOpOnEmpty(t *testing.T) {
 // -- Golden-based rendering tests ------------------------------------
 
 func TestGoldenEmpty(t *testing.T) {
-	m := New()
+	m := NewLogViewer()
 	m.SetSize(80, 24)
-	if err := snapshotter().SnapshotMulti("empty", viewContent(m.View())); err != nil {
+	if err := logViewerSnapshotter().SnapshotMulti("empty", viewContent(m.View())); err != nil {
 		t.Fatalf("snapshot mismatch: %v", err)
 	}
 }
 
 func TestGoldenPlainShortLog(t *testing.T) {
-	m := New()
+	m := NewLogViewer()
 	m.SetSize(80, 24)
 	m.Append(
 		"2026-04-17 10:00:00 INFO starting up",
 		"2026-04-17 10:00:01 INFO ready",
 		"2026-04-17 10:00:02 WARN retrying",
 	)
-	if err := snapshotter().SnapshotMulti("plain_short", viewContent(m.View())); err != nil {
+	if err := logViewerSnapshotter().SnapshotMulti("plain_short", viewContent(m.View())); err != nil {
 		t.Fatalf("snapshot mismatch: %v", err)
 	}
 }
 
 func TestGoldenAnsiColouredLog(t *testing.T) {
-	m := New()
+	m := NewLogViewer()
 	m.SetSize(80, 24)
 	m.Append(
 		"\x1b[31mred text\x1b[0m plain tail",
 		"\x1b[1;32mbold green\x1b[0m",
 		"\x1b[33myellow\x1b[39m default-again",
 	)
-	if err := snapshotter().SnapshotMulti("ansi_coloured", viewContent(m.View())); err != nil {
+	if err := logViewerSnapshotter().SnapshotMulti("ansi_coloured", viewContent(m.View())); err != nil {
 		t.Fatalf("snapshot mismatch: %v", err)
 	}
 }
 
 func TestGoldenLongLineWrapOn(t *testing.T) {
-	m := New()
+	m := NewLogViewer()
 	m.SetSize(20, 24)
 	long := strings.Repeat("abcdefghij", 6) // 60 chars, well over 20
 	m.Append(long)
-	if err := snapshotter().SnapshotMulti("long_line_wrap_on", viewContent(m.View())); err != nil {
+	if err := logViewerSnapshotter().SnapshotMulti("long_line_wrap_on", viewContent(m.View())); err != nil {
 		t.Fatalf("snapshot mismatch: %v", err)
 	}
 }
 
 func TestGoldenLongLineWrapOff(t *testing.T) {
-	m := New(WithWrap(false))
+	m := NewLogViewer(WithWrap(false))
 	m.SetSize(20, 24)
 	long := strings.Repeat("abcdefghij", 6)
 	m.Append(long)
-	if err := snapshotter().SnapshotMulti("long_line_wrap_off", viewContent(m.View())); err != nil {
+	if err := logViewerSnapshotter().SnapshotMulti("long_line_wrap_off", viewContent(m.View())); err != nil {
 		t.Fatalf("snapshot mismatch: %v", err)
 	}
 }
@@ -319,7 +319,7 @@ func TestGoldenLongLineWrapOff(t *testing.T) {
 // frame. This is the canonical "reader scrolled back through history"
 // visual.
 func TestGoldenPlainLongScrolled(t *testing.T) {
-	m := New()
+	m := NewLogViewer()
 	m.SetSize(80, 24)
 	lines := make([]string, 0, 60)
 	for i := 0; i < 60; i++ {
@@ -328,7 +328,7 @@ func TestGoldenPlainLongScrolled(t *testing.T) {
 	m.Append(lines...)
 	m.SetFollowing(false)
 	m.viewport.SetYOffset(15)
-	if err := snapshotter().SnapshotMulti("plain_long_scrolled", viewContent(m.View())); err != nil {
+	if err := logViewerSnapshotter().SnapshotMulti("plain_long_scrolled", viewContent(m.View())); err != nil {
 		t.Fatalf("snapshot mismatch: %v", err)
 	}
 }
@@ -338,14 +338,14 @@ func TestGoldenPlainLongScrolled(t *testing.T) {
 // 16-color path; this one ensures truecolor escapes survive the SGR
 // parser and lipgloss round-trip.
 func TestGoldenTruecolorAnsi(t *testing.T) {
-	m := New()
+	m := NewLogViewer()
 	m.SetSize(80, 24)
 	m.Append(
 		"\x1b[38;2;255;128;0mhello\x1b[0m plain tail",
 		"\x1b[1;38;2;64;192;255mbold cyan-ish\x1b[0m",
 		"\x1b[48;2;32;32;32mdark bg\x1b[49m default-bg-again",
 	)
-	if err := snapshotter().SnapshotMulti("truecolor_ansi", viewContent(m.View())); err != nil {
+	if err := logViewerSnapshotter().SnapshotMulti("truecolor_ansi", viewContent(m.View())); err != nil {
 		t.Fatalf("snapshot mismatch: %v", err)
 	}
 }
@@ -364,7 +364,7 @@ func itoa3(i int) string {
 // contain some SGR escape sequence — we don't lose colour on the way
 // through the pipeline.
 func TestAnsiRenderingContainsStyledSequence(t *testing.T) {
-	m := New()
+	m := NewLogViewer()
 	m.SetSize(80, 24)
 	m.Append("\x1b[31mred\x1b[0m")
 	got := viewContent(m.View())
@@ -379,26 +379,26 @@ func TestWrapBehaviour(t *testing.T) {
 	long := strings.Repeat("abcdefghij", 6) // 60 chars
 	tests := []struct {
 		name        string
-		opts        []Option
+		opts        []LogViewerOption
 		width       int
 		wantWrapped bool
 	}{
 		{
 			name:        "wrap on",
-			opts:        []Option{WithWrap(true)},
+			opts:        []LogViewerOption{WithWrap(true)},
 			width:       20,
 			wantWrapped: true,
 		},
 		{
 			name:        "wrap off",
-			opts:        []Option{WithWrap(false)},
+			opts:        []LogViewerOption{WithWrap(false)},
 			width:       20,
 			wantWrapped: false,
 		},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			m := New(tc.opts...)
+			m := NewLogViewer(tc.opts...)
 			m.SetSize(tc.width, 24)
 			m.Append(long)
 			got := viewContent(m.View())
@@ -422,8 +422,8 @@ func TestWrapBehaviour(t *testing.T) {
 	}
 }
 
-func TestInitReturnsNil(t *testing.T) {
-	m := New()
+func TestLogViewerInitReturnsNil(t *testing.T) {
+	m := NewLogViewer()
 	if cmd := m.Init(); cmd != nil {
 		t.Errorf("Init(): want nil cmd, got %v", cmd)
 	}

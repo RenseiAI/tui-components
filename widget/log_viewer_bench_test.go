@@ -30,7 +30,7 @@ func BenchmarkLogViewer_Append(b *testing.B) {
 	lines := benchLines(maxLines + 1) // one extra to append per-iter
 
 	b.Run("WrapOn", func(b *testing.B) {
-		m := New(WithMaxLines(maxLines), WithWrap(true))
+		m := NewLogViewer(WithMaxLines(maxLines), WithWrap(true))
 		m.SetSize(80, 24)
 		// Warm the ring: fill to capacity so every Append is a rotate.
 		for i := 0; i < maxLines; i++ {
@@ -46,7 +46,7 @@ func BenchmarkLogViewer_Append(b *testing.B) {
 	})
 
 	b.Run("WrapOff", func(b *testing.B) {
-		m := New(WithMaxLines(maxLines), WithWrap(false))
+		m := NewLogViewer(WithMaxLines(maxLines), WithWrap(false))
 		m.SetSize(80, 24)
 		for i := 0; i < maxLines; i++ {
 			m.appendOne(lines[i])
@@ -71,7 +71,7 @@ func BenchmarkLogViewer_Append(b *testing.B) {
 // slot" assertion from the REN-123 acceptance criteria.
 func TestLogViewer_AppendRingAllocs(t *testing.T) {
 	const maxLines = 1000
-	m := New(WithMaxLines(maxLines))
+	m := NewLogViewer(WithMaxLines(maxLines))
 	m.SetSize(80, 24)
 
 	lines := benchLines(maxLines + 1)

@@ -6,11 +6,11 @@ import (
 	tea "charm.land/bubbletea/v2"
 )
 
-// keyPress constructs a KeyPressMsg whose String() matches the given
+// logViewerKey constructs a KeyPressMsg whose String() matches the given
 // textual representation. For printable single characters the Text
 // field is used; for named keys (up, pgup, etc.) the Code field is
 // set.
-func keyPress(s string) tea.KeyPressMsg {
+func logViewerKey(s string) tea.KeyPressMsg {
 	switch s {
 	case "up":
 		return tea.KeyPressMsg{Code: tea.KeyUp}
@@ -37,7 +37,7 @@ func keyPress(s string) tea.KeyPressMsg {
 // live, and has 30 lines appended.
 func fillFollowing(t *testing.T) *LogViewer {
 	t.Helper()
-	m := New()
+	m := NewLogViewer()
 	m.Focus()
 	m.SetSize(20, 6)
 	for i := 0; i < 30; i++ {
@@ -92,7 +92,7 @@ func TestScrollStateMachine(t *testing.T) {
 			name:  "following then scroll-up key pauses and lifts off tail",
 			setup: fillFollowing,
 			action: func(m *LogViewer) {
-				_, _ = m.Update(keyPress("up"))
+				_, _ = m.Update(logViewerKey("up"))
 			},
 			check: func(t *testing.T, m *LogViewer) {
 				t.Helper()
@@ -124,7 +124,7 @@ func TestScrollStateMachine(t *testing.T) {
 			name:  "paused then G re-engages follow and jumps to tail",
 			setup: fillPaused,
 			action: func(m *LogViewer) {
-				_, _ = m.Update(keyPress("G"))
+				_, _ = m.Update(logViewerKey("G"))
 			},
 			check: func(t *testing.T, m *LogViewer) {
 				t.Helper()
@@ -140,7 +140,7 @@ func TestScrollStateMachine(t *testing.T) {
 			name:  "paused then end re-engages follow",
 			setup: fillPaused,
 			action: func(m *LogViewer) {
-				_, _ = m.Update(keyPress("end"))
+				_, _ = m.Update(logViewerKey("end"))
 			},
 			check: func(t *testing.T, m *LogViewer) {
 				t.Helper()
@@ -156,7 +156,7 @@ func TestScrollStateMachine(t *testing.T) {
 			name:  "f toggles follow off when following",
 			setup: fillFollowing,
 			action: func(m *LogViewer) {
-				_, _ = m.Update(keyPress("f"))
+				_, _ = m.Update(logViewerKey("f"))
 			},
 			check: func(t *testing.T, m *LogViewer) {
 				t.Helper()
@@ -169,7 +169,7 @@ func TestScrollStateMachine(t *testing.T) {
 			name:  "f toggles follow on when paused",
 			setup: fillPaused,
 			action: func(m *LogViewer) {
-				_, _ = m.Update(keyPress("f"))
+				_, _ = m.Update(logViewerKey("f"))
 			},
 			check: func(t *testing.T, m *LogViewer) {
 				t.Helper()
@@ -214,7 +214,7 @@ func TestScrollStateMachine(t *testing.T) {
 			name:  "following then k pauses",
 			setup: fillFollowing,
 			action: func(m *LogViewer) {
-				_, _ = m.Update(keyPress("k"))
+				_, _ = m.Update(logViewerKey("k"))
 			},
 			check: func(t *testing.T, m *LogViewer) {
 				t.Helper()
@@ -227,7 +227,7 @@ func TestScrollStateMachine(t *testing.T) {
 			name:  "following then pgup pauses",
 			setup: fillFollowing,
 			action: func(m *LogViewer) {
-				_, _ = m.Update(keyPress("pgup"))
+				_, _ = m.Update(logViewerKey("pgup"))
 			},
 			check: func(t *testing.T, m *LogViewer) {
 				t.Helper()
@@ -240,7 +240,7 @@ func TestScrollStateMachine(t *testing.T) {
 			name:  "following then home pauses",
 			setup: fillFollowing,
 			action: func(m *LogViewer) {
-				_, _ = m.Update(keyPress("home"))
+				_, _ = m.Update(logViewerKey("home"))
 			},
 			check: func(t *testing.T, m *LogViewer) {
 				t.Helper()
@@ -253,7 +253,7 @@ func TestScrollStateMachine(t *testing.T) {
 			name:  "following then g pauses",
 			setup: fillFollowing,
 			action: func(m *LogViewer) {
-				_, _ = m.Update(keyPress("g"))
+				_, _ = m.Update(logViewerKey("g"))
 			},
 			check: func(t *testing.T, m *LogViewer) {
 				t.Helper()
@@ -281,7 +281,7 @@ func TestMouseWheelUpPauses(t *testing.T) {
 }
 
 func TestGoldenFooterFollow(t *testing.T) {
-	m := New()
+	m := NewLogViewer()
 	m.SetSize(80, 24)
 	m.Append(
 		"2026-04-17 10:00:00 INFO starting up",
@@ -291,13 +291,13 @@ func TestGoldenFooterFollow(t *testing.T) {
 	if !m.Following() {
 		t.Fatal("precondition: follow should be on")
 	}
-	if err := snapshotter().SnapshotMulti("footer_follow", viewContent(m.View())); err != nil {
+	if err := logViewerSnapshotter().SnapshotMulti("footer_follow", viewContent(m.View())); err != nil {
 		t.Fatalf("snapshot mismatch: %v", err)
 	}
 }
 
 func TestGoldenFooterPaused(t *testing.T) {
-	m := New()
+	m := NewLogViewer()
 	m.SetSize(80, 24)
 	m.Append(
 		"2026-04-17 10:00:00 INFO starting up",
@@ -308,7 +308,7 @@ func TestGoldenFooterPaused(t *testing.T) {
 	if m.Following() {
 		t.Fatal("precondition: follow should be off")
 	}
-	if err := snapshotter().SnapshotMulti("footer_paused", viewContent(m.View())); err != nil {
+	if err := logViewerSnapshotter().SnapshotMulti("footer_paused", viewContent(m.View())); err != nil {
 		t.Fatalf("snapshot mismatch: %v", err)
 	}
 }

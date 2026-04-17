@@ -9,9 +9,9 @@ import (
 
 // newFocusedForKeymap constructs a LogViewer that is focused, sized,
 // and primed with enough lines to exercise scroll-away bindings.
-func newFocusedForKeymap(t *testing.T, opts ...Option) *LogViewer {
+func newFocusedForKeymap(t *testing.T, opts ...LogViewerOption) *LogViewer {
 	t.Helper()
-	m := New(opts...)
+	m := NewLogViewer(opts...)
 	m.Focus()
 	m.SetSize(20, 6)
 	for i := 0; i < 30; i++ {
@@ -227,7 +227,7 @@ func TestKeyMapActionTable(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			m := tc.setup(t)
-			_, _ = m.Update(keyPress(tc.key))
+			_, _ = m.Update(logViewerKey(tc.key))
 			tc.verify(t, m)
 		})
 	}
@@ -243,7 +243,7 @@ func TestWithKeyMapOverride(t *testing.T) {
 			key.WithHelp("F", "toggle follow"),
 		),
 	}
-	m := New(WithKeyMap(custom))
+	m := NewLogViewer(WithLogViewerKeyMap(custom))
 	m.Focus()
 	m.SetSize(20, 6)
 	for i := 0; i < 30; i++ {
@@ -253,13 +253,13 @@ func TestWithKeyMapOverride(t *testing.T) {
 	// Default 'f' should no longer toggle follow because every other
 	// binding on the custom KeyMap is empty.
 	before := m.Following()
-	_, _ = m.Update(keyPress("f"))
+	_, _ = m.Update(logViewerKey("f"))
 	if m.Following() != before {
 		t.Errorf("lowercase f should not toggle with override; before=%v after=%v", before, m.Following())
 	}
 
 	// Capital 'F' should.
-	_, _ = m.Update(keyPress("F"))
+	_, _ = m.Update(logViewerKey("F"))
 	if m.Following() == before {
 		t.Errorf("capital F should toggle follow; before=%v after=%v", before, m.Following())
 	}
@@ -267,29 +267,29 @@ func TestWithKeyMapOverride(t *testing.T) {
 
 func TestFocusBlurDispatchMatrix(t *testing.T) {
 	t.Run("focused key toggles wrap", func(t *testing.T) {
-		m := New()
+		m := NewLogViewer()
 		m.Focus()
 		m.SetSize(40, 10)
 		before := m.Wrap()
-		_, _ = m.Update(keyPress("w"))
+		_, _ = m.Update(logViewerKey("w"))
 		if m.Wrap() == before {
 			t.Errorf("focused: wrap did not toggle (before=%v)", before)
 		}
 	})
 
 	t.Run("blurred key dropped", func(t *testing.T) {
-		m := New()
+		m := NewLogViewer()
 		// m.Focus() intentionally NOT called.
 		m.SetSize(40, 10)
 		before := m.Wrap()
-		_, _ = m.Update(keyPress("w"))
+		_, _ = m.Update(logViewerKey("w"))
 		if m.Wrap() != before {
 			t.Errorf("blurred: wrap toggled despite focus gate (before=%v after=%v)", before, m.Wrap())
 		}
 	})
 
 	t.Run("blurred AppendMsg still grows buffer", func(t *testing.T) {
-		m := New()
+		m := NewLogViewer()
 		m.SetSize(40, 10)
 		_, _ = m.Update(AppendMsg{Lines: []string{"a", "b", "c"}})
 		if len(m.lines) != 3 {
@@ -298,7 +298,7 @@ func TestFocusBlurDispatchMatrix(t *testing.T) {
 	})
 
 	t.Run("blurred WindowSizeMsg still resizes", func(t *testing.T) {
-		m := New()
+		m := NewLogViewer()
 		_, _ = m.Update(tea.WindowSizeMsg{Width: 77, Height: 11})
 		if m.width != 77 || m.height != 11 {
 			t.Errorf("blurred WindowSizeMsg: want 77x11, got %dx%d", m.width, m.height)
@@ -306,7 +306,7 @@ func TestFocusBlurDispatchMatrix(t *testing.T) {
 	})
 
 	t.Run("blurred MouseWheelMsg still scrolls viewport", func(t *testing.T) {
-		m := New()
+		m := NewLogViewer()
 		m.SetSize(20, 6)
 		for i := 0; i < 30; i++ {
 			m.Append("line")
@@ -323,7 +323,7 @@ func TestFocusBlurDispatchMatrix(t *testing.T) {
 }
 
 func TestSetWrapTogglesField(t *testing.T) {
-	m := New()
+	m := NewLogViewer()
 	if !m.Wrap() {
 		t.Fatal("default wrap should be true")
 	}
@@ -338,7 +338,7 @@ func TestSetWrapTogglesField(t *testing.T) {
 }
 
 func TestKeyMapGetter(t *testing.T) {
-	m := New()
+	m := NewLogViewer()
 	km := m.KeyMap()
 	want := DefaultKeyMap()
 	if km.ToggleFollow.Keys()[0] != want.ToggleFollow.Keys()[0] {
@@ -347,7 +347,7 @@ func TestKeyMapGetter(t *testing.T) {
 }
 
 func TestFocusedGetter(t *testing.T) {
-	m := New()
+	m := NewLogViewer()
 	if m.Focused() {
 		t.Error("default Focused: want false")
 	}

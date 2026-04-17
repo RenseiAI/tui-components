@@ -25,7 +25,7 @@ var _ component.Component = (*LogViewer)(nil)
 
 // KeyMap defines the key bindings used by LogViewer. Consumers can
 // rebind any action by constructing a new KeyMap and passing it via
-// [WithKeyMap].
+// [WithLogViewerKeyMap].
 //
 // Each binding carries its own help text (see [key.WithHelp]) so a
 // future help-bar integration can surface the active bindings without
@@ -144,14 +144,14 @@ type LogViewer struct {
 	height int
 }
 
-// Option configures a LogViewer at construction time.
-type Option func(*LogViewer)
+// LogViewerOption configures a LogViewer at construction time.
+type LogViewerOption func(*LogViewer)
 
 // WithMaxLines caps the number of retained lines. Once the buffer is
 // full, the oldest line is discarded on each append. Passing 0 disables
 // the cap (unbounded retention). Negative values are ignored with a
 // warning logged to stderr and the default (10_000) is retained.
-func WithMaxLines(n int) Option {
+func WithMaxLines(n int) LogViewerOption {
 	return func(m *LogViewer) {
 		if n < 0 {
 			log.Warn("log viewer: negative WithMaxLines ignored", "requested", n, "fallback", defaultMaxLines)
@@ -165,7 +165,7 @@ func WithMaxLines(n int) Option {
 // longer than the viewport width are wrapped to subsequent rows. When
 // false, lines overflow horizontally and the viewport exposes
 // horizontal scrolling.
-func WithWrap(enabled bool) Option {
+func WithWrap(enabled bool) LogViewerOption {
 	return func(m *LogViewer) {
 		m.wrap = enabled
 	}
@@ -173,16 +173,16 @@ func WithWrap(enabled bool) Option {
 
 // WithFollow sets the initial follow state. When follow is on
 // (default), each append auto-scrolls the viewport to the bottom.
-func WithFollow(enabled bool) Option {
+func WithFollow(enabled bool) LogViewerOption {
 	return func(m *LogViewer) {
 		m.follow = enabled
 	}
 }
 
-// WithKeyMap overrides the default key bindings. Any unset fields on
+// WithLogViewerKeyMap overrides the default key bindings. Any unset fields on
 // the supplied map disable the corresponding action (an empty
 // [key.Binding] matches nothing).
-func WithKeyMap(km KeyMap) Option {
+func WithLogViewerKeyMap(km KeyMap) LogViewerOption {
 	return func(m *LogViewer) {
 		m.keys = km
 	}
@@ -190,7 +190,7 @@ func WithKeyMap(km KeyMap) Option {
 
 // New constructs a LogViewer with the given options applied on top of
 // the defaults (maxLines=10_000, wrap=true, follow=true, KeyMap=DefaultKeyMap).
-func New(opts ...Option) *LogViewer {
+func NewLogViewer(opts ...LogViewerOption) *LogViewer {
 	m := &LogViewer{
 		parser:   newSGRParser(),
 		maxLines: defaultMaxLines,
