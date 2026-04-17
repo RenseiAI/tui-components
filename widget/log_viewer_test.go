@@ -117,9 +117,10 @@ func TestAppendThenClear(t *testing.T) {
 	if len(m.lines) != 0 {
 		t.Errorf("want 0 lines after clear, got %d", len(m.lines))
 	}
-	// View should render empty content (no retained lines).
-	if got := strings.TrimSpace(viewContent(m.View())); got != "" {
-		t.Errorf("view after clear: want empty, got %q", got)
+	// After Clear the retained buffer is empty; only the FOLLOW footer
+	// (which is always rendered) remains on the final row.
+	if got := viewContent(m.View()); !strings.Contains(got, "FOLLOW") {
+		t.Errorf("view after clear: want FOLLOW footer, got %q", got)
 	}
 }
 
@@ -355,18 +356,20 @@ func TestWrapBehaviour(t *testing.T) {
 			m.Append(long)
 			got := viewContent(m.View())
 			// Count non-empty output lines. Wrap=on should produce
-			// multiple; wrap=off the single original.
+			// multiple content rows; wrap=off only one — plus a
+			// single footer row in both cases.
 			lines := 0
 			for _, l := range strings.Split(got, "\n") {
 				if strings.TrimSpace(l) != "" {
 					lines++
 				}
 			}
-			if tc.wantWrapped && lines < 2 {
-				t.Errorf("wrap on: expected multiple non-empty rows, got %d (%q)", lines, got)
+			// Footer always adds one row when visible.
+			if tc.wantWrapped && lines < 3 {
+				t.Errorf("wrap on: expected >=3 non-empty rows (content wraps + footer), got %d (%q)", lines, got)
 			}
-			if !tc.wantWrapped && lines != 1 {
-				t.Errorf("wrap off: expected 1 non-empty row, got %d (%q)", lines, got)
+			if !tc.wantWrapped && lines != 2 {
+				t.Errorf("wrap off: expected 2 non-empty rows (content + footer), got %d (%q)", lines, got)
 			}
 		})
 	}

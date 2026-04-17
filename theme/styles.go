@@ -158,3 +158,19 @@ func TabSeparator() lipgloss.Style {
 	return lipgloss.NewStyle().
 		Foreground(SurfaceBorder)
 }
+
+// LogFollow returns the style used to render the LogViewer footer
+// indicator when the viewport is actively tailing new output. It wraps
+// [StatValueTeal] with single-column horizontal padding so the text
+// reads as a recognisable badge (" FOLLOW ").
+func LogFollow() lipgloss.Style {
+	return StatValueTeal().Padding(0, 1)
+}
+
+// LogPaused returns the style used to render the LogViewer footer
+// indicator when the viewport is scroll-locked (not following). It
+// wraps [StatValueAccent] with single-column horizontal padding so the
+// text reads as a recognisable badge (" PAUSED ").
+func LogPaused() lipgloss.Style {
+	return StatValueAccent().Padding(0, 1)
+}
