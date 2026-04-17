@@ -1,0 +1,33 @@
+# git-cliff config consumed by .github/workflows/release.yml to generate GitHub release notes from conventional commits.
+
+[changelog]
+header = ""
+body = """
+## [{{ version }}] - {{ timestamp | date(format="%Y-%m-%d") }}
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group }}
+{% for commit in commits %}
+- {{ commit.message | split(pat="\n") | first | trim }}{% endfor %}
+{% endfor %}
+"""
+footer = ""
+trim = true
+
+[git]
+conventional_commits = true
+filter_unconventional = true
+split_commits = false
+protect_breaking_commits = false
+filter_commits = true
+topo_order = false
+sort_commits = "newest"
+
+commit_parsers = [
+    { message = "^chore\\(deps\\)", skip = true },
+    { message = "^Merge ", skip = true },
+    { message = "^feat", group = "Features" },
+    { message = "^fix", group = "Bug Fixes" },
+    { message = "^perf", group = "Performance" },
+    { message = "^docs", group = "Documentation" },
+    { message = "^chore", group = "Chores" },
+]

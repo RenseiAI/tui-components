@@ -1,0 +1,71 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Build
+        run: go build ./...
+
+      - name: Test
+        run: go test -race ./...
+
+      - name: Lint
+        uses: golangci/golangci-lint-action@v7
+        with:
+          version: v2.11.4
+
+      - name: Vulnerability check
+        continue-on-error: true
+        run: go install golang.org/x/vuln/cmd/govulncheck@latest && govulncheck ./...
+
+      - name: Install git-cliff
+        run: |
+          set -euo pipefail
+          version="2.6.1"
+          curl -fsSL "https://github.com/orhun/git-cliff/releases/download/v${version}/git-cliff-${version}-x86_64-unknown-linux-gnu.tar.gz" \
+            | tar -xz
+          sudo mv "git-cliff-${version}/git-cliff" /usr/local/bin/git-cliff
+          git-cliff --version
+
+      - name: Generate release notes
+        run: git-cliff --latest --strip all --output RELEASE_NOTES.md
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create "$GITHUB_REF_NAME" --notes-file RELEASE_NOTES.md --verify-tag
+
+      - name: Verify module on proxy.golang.org
+        shell: bash
+        run: |
+          set -euo pipefail
+          url="https://proxy.golang.org/github.com/!rensei!a!i/tui-components/@v/${GITHUB_REF_NAME}.info"
+          backoffs=(10 20 30 40 50)
+          for i in 1 2 3 4 5; do
+            if curl -fsSL "$url" -o /dev/null; then
+              echo "Module resolved on proxy.golang.org on attempt $i"
+              exit 0
+            fi
+            if [ "$i" -lt 5 ]; then
+              sleep "${backoffs[$((i-1))]}"
+            fi
+          done
+          echo "ERROR: module ${GITHUB_REF_NAME} not resolvable on proxy.golang.org after 5 attempts: $url" >&2
+          exit 1
