@@ -4,6 +4,16 @@ OSS shared TUI component library for the AgentFactory ecosystem.
 
 **Module**: `github.com/RenseiAI/tui-components`
 
+## Architecture
+
+Authoritative architecture lives in `../rensei-architecture/`. Read in this order:
+
+1. `001-layered-execution-model.md` — canonical synthesis. Always first.
+2. The reference doc(s) for whichever layer you are working on (`002`–`008`, `011`, `013`–`016`).
+3. Any open ADRs that touch your work (`ADR-*.md`).
+
+If this project's docs conflict with `../rensei-architecture/`, the corpus wins. Either update this project's docs to align, or open an ADR to amend the corpus.
+
 ## Boundary
 
 This is an open-source project. It must never contain or reference proprietary platform features, API details, or closed-source concepts. All components must be generic and reusable. Downstream consumers extend these components — this library must remain platform-agnostic.
