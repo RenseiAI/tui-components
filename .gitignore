@@ -8,3 +8,4 @@ coverage.out
 
 # agent dev artifacts
 .agent/
+.claude/worktrees
