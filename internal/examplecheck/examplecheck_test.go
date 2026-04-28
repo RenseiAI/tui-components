@@ -59,9 +59,17 @@ var themeStyleConstructors = map[string]bool{
 // v0.2.0: package-level palette vars (BgPrimary, Accent, etc.) were
 // removed in favour of the Theme struct; ActivityColors/Icons remain
 // as vars initialised from the default theme.
+// REN-1330: registry entry types and GlobalRegistry are also swept by
+// the package-level Example rather than requiring per-type examples.
 var themePackageLevelCovered = map[string]bool{
 	"ActivityColors": true,
 	"ActivityIcons":  true,
+	// Open registry types — covered by package-level Example.
+	"StatusEntry":    true,
+	"WorkTypeEntry":  true,
+	"ActivityEntry":  true,
+	"Registry":       true,
+	"GlobalRegistry": true,
 }
 
 func TestExportedSymbolsHaveExamples(t *testing.T) {

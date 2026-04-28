@@ -23,13 +23,21 @@ Architecture-aware primitives milestone. All items below land via dependent issu
   `theme.Default()` returns a pointer to the package-level default Theme for legacy callers.
   See `MIGRATION-v0.2.0.md §1` for the mechanical migration steps.
 
-- **Open capability registries (REN-1330):** `theme.GetStatusStyle`,
+- **Open capability registries (REN-1330) — LANDED:** `theme.GetStatusStyle`,
   `theme.GetWorkTypeColor`, and `theme.GetActivityIcon` previously used closed
-  switch statements over a fixed set of string keys.  These are replaced by a
-  registry API (`themeRegistry.RegisterStatus`, `…RegisterWorkType`,
-  `…RegisterActivity`).  Callers that switch on known keys continue to work;
-  callers that relied on the exhaustive closed switch for compile-time coverage
-  must migrate to registry lookups with the provided fallback rendering.
+  switch / map literals over a fixed set of string keys.  These are replaced by
+  a thread-safe open registry API backed by `theme.GlobalRegistry` (`*Registry`).
+  Plugins and kits register new kinds at activation time via
+  `GlobalRegistry.RegisterStatus(StatusEntry{…})`,
+  `GlobalRegistry.RegisterWorkType(WorkTypeEntry{…})`, and
+  `GlobalRegistry.RegisterActivity(ActivityEntry{…})`.  All 16 built-in work
+  types, 6 built-in status kinds, and 5 built-in activity kinds are
+  pre-registered during `package init`.  Unknown kinds return a fallback style
+  ("?" symbol, `TextSecondary` color, `"Unknown"` label) rather than a silent
+  zero value.  `GetActivityColor(kind)` and `GetActivityIcon(kind)` are new
+  registry-backed helpers; the legacy `ActivityColors` and `ActivityIcons` map
+  vars are retained (deprecated) for backward compat.  Tests assert no closed
+  switches remain (`TestNoClosedSwitches`).
 
 ### New primitives — architecture-concept layer (REN-1331)
 
