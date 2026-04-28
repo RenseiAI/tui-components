@@ -3,6 +3,4 @@
 package tuicomponents
 
 // Version is the current module version. Updated on each release.
-// v0.2.0-pre indicates active development toward the v0.2.0 milestone,
-// which introduces architecture-aware primitives per 014-tui-operator-surfaces.md.
-const Version = "v0.2.0-pre"
+const Version = "v0.2.0"

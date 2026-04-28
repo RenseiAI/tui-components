@@ -6,7 +6,7 @@ For the full release workflow, see `RELEASING.md`.
 
 ---
 
-## [v0.2.0] — In progress
+## [v0.2.0] — 2026-04-28
 
 Architecture-aware primitives milestone. All items below land via dependent issues
 (REN-1319, REN-1330, REN-1331, REN-1332) in a single coordinated breaking-change release.
