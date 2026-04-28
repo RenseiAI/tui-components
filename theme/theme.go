@@ -127,6 +127,18 @@ type Theme struct {
 	// TextTertiary is the lowest-contrast text color — hints, placeholders,
 	// disabled text.
 	TextTertiary color.Color
+
+	// --- Accessibility -------------------------------------------------------
+
+	// A11y controls the accessibility rendering mode for primitives that use
+	// this theme.  The zero value ([A11yNone]) is the default: full Unicode
+	// symbols and color.  Use [Theme.WithA11y] to apply a mode, or detect it
+	// from the environment with [A11yModeFromEnv].
+	//
+	// Widgets and format helpers must read A11y from the Theme they receive —
+	// never from os.Getenv directly — so that tests and server-side renderers
+	// can override the mode without touching the process environment.
+	A11y A11yMode
 }
 
 // DefaultTheme returns the canonical tui-components theme — the dark navy

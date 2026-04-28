@@ -51,7 +51,7 @@ Primitives from `014-tui-operator-surfaces.md`:
 | `PolicyDecisionBanner` | Layer 6 | allowed/blocked/needs-approval banner |
 | `CostPanel` | Layer 6 / `006` | Per-session/issue/tenant cost breakdown with trend |
 
-### New format helpers (REN-1332)
+### New format helpers (REN-1332) — LANDED
 
 | Helper | Description |
 |---|---|
@@ -61,11 +61,22 @@ Primitives from `014-tui-operator-surfaces.md`:
 | `format.ToolchainSpec` | `"java=17, node=20"` multi-toolchain rendering |
 | `format.HumanLabel[T]` | Generic typed-flag → human-readable string lookup |
 
-### Accessibility opt-in (REN-1332)
+### Accessibility opt-in (REN-1332) — LANDED
 
-- Honor `NO_COLOR` env var: force symbol-first rendering when set.
-- `RENSEI_A11Y=true` env var or `--a11y` flag: high-contrast theme + verbose labels.
-- Every new primitive declares an `accessibleLabel` field for screen-reader consumers.
+- `theme.A11yMode` type on the `Theme` struct; three values: `A11yNone` (default),
+  `A11yNoColor` (color suppressed, Unicode symbols kept), `A11yFull` (verbose ASCII labels +
+  high-contrast color tokens).
+- `theme.A11yModeFromEnv()` detects `NO_COLOR` (any non-empty value → `A11yNoColor`) and
+  `RENSEI_A11Y=true` (→ `A11yFull`) at startup.  Detection order: RENSEI_A11Y wins.
+- `theme.Theme.WithA11y(mode)` returns an updated copy; `A11yFull` also replaces all color
+  tokens with `HighContrastTheme()` values in the same call, so widgets automatically render
+  at the correct contrast level without further intervention.
+- `theme.Theme.RenderSymbol(symbol, verboseLabel)` selects between Unicode glyph and ASCII
+  label based on the theme's `A11y` field — the single gate widgets must call.
+- `theme.Theme.NoColor()` reports whether color application should be suppressed (`true` for
+  both `A11yNoColor` and `A11yFull`).
+- A11y is fully theme-driven: widgets read `theme.A11y` — never `os.Getenv` directly — so
+  tests and server-side renderers can override the mode without touching the process environment.
 
 ---
 
