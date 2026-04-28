@@ -39,25 +39,29 @@ Architecture-aware primitives milestone. All items below land via dependent issu
   vars are retained (deprecated) for backward compat.  Tests assert no closed
   switches remain (`TestNoClosedSwitches`).
 
-### New primitives — architecture-concept layer (REN-1331)
+### New primitives — architecture-concept layer (REN-1331) — LANDED
 
-Primitives from `014-tui-operator-surfaces.md`:
+Primitives from `014-tui-operator-surfaces.md`.  All 13 widgets shipped in
+`widget/` with tests and godoc examples.  Each accepts `WithXxxTheme(t)` for
+theme swap and exposes `AccessibleLabel()` + `WithXxxNoColor(true)` for a11y:
 
-| Primitive | Spec ref | Description |
-|---|---|---|
-| `CapabilityChip` | `002` | Typed flag + human label chip |
-| `ScopePill` | `002` | `project | org | tenant | global` scope indicator |
-| `AttestationChip` | `002` | Signed/unsigned/verified state with fingerprint |
-| `WorkerRow` | `013` | Single worker with status, region, load, billing model |
-| `FleetGrid` | `013` | Grid of WorkerRows grouped by machine/daemon |
-| `MachinePivot` | `013` | Multi-machine breakdown for SaaS aggregation |
-| `WorkareaPoolPanel` | `003`/`004` | Warm/cold/in-use slot breakdown per (repo, toolchain) |
-| `KitDetectResult` | `005` | Kit match list with ordering and conflict indicators |
-| `ToolchainChip` | `004`/`005` | `java=17`, `node=20.x` toolchain demand or workarea state |
-| `AuditEntry` | Layer 6 | Signed event row with attestation + timestamp |
-| `AuditChain` | Layer 6 | Composed AuditEntry list with chain integrity indicator |
-| `PolicyDecisionBanner` | Layer 6 | allowed/blocked/needs-approval banner |
-| `CostPanel` | Layer 6 / `006` | Per-session/issue/tenant cost breakdown with trend |
+| Primitive | File | Spec ref | Description |
+|---|---|---|---|
+| `CapabilityChip` | `capability_chip.go` | `002` | Typed flag + human label chip |
+| `ScopePill` | `scope_pill.go` | `002` | `project \| org \| tenant \| global` scope indicator |
+| `AttestationChip` | `attestation_chip.go` | `002` | Signed/unsigned/verified state with fingerprint |
+| `ProviderHealthDot` | `provider_health_dot.go` | `002` | ready/degraded/unhealthy indicator dot |
+| `WorkerRow` | `worker_row.go` | `013` | Single worker with status, region, load, billing model |
+| `FleetGrid` | `fleet_grid.go` | `013` | Grid of WorkerRows grouped by machine/daemon |
+| `MachinePivot` | `machine_pivot.go` | `013` | Multi-machine breakdown for SaaS aggregation |
+| `SandboxCapacityGauge` | `sandbox_capacity_gauge.go` | `004` | Concurrent/max with utilization bar; degenerates to `∞` |
+| `WorkareaPoolPanel` | `workarea_pool_panel.go` | `003`/`004` | Warm/cold/in-use slot breakdown per (repo, toolchain) |
+| `KitDetectResult` | `kit_detect_result.go` | `005` | Kit match list with ordering and conflict indicators |
+| `ToolchainChip` | `toolchain_chip.go` | `004`/`005` | `java=17`, `node=20.x` toolchain demand or workarea state |
+| `AuditEntry` | `audit_entry.go` | Layer 6 | Signed event row with attestation + timestamp |
+| `AuditChain` | `audit_chain.go` | Layer 6 | Composed AuditEntry list with chain integrity indicator |
+| `PolicyDecisionBanner` | `policy_decision_banner.go` | Layer 6 | allowed/blocked/needs-approval banner |
+| `CostPanel` | `cost_panel.go` | Layer 6 / `006` | Per-session/issue/tenant cost breakdown with trend |
 
 ### New format helpers (REN-1332) — LANDED
 
