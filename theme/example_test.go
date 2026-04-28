@@ -112,6 +112,39 @@ func ExampleHighContrastTheme() {
 	_ = t.BgPrimary
 }
 
+func ExampleA11yMode() {
+	// A11yMode is embedded in a Theme via WithA11y. The zero value is A11yNone.
+	t := DefaultTheme().WithA11y(A11yNoColor)
+	// NoColor() reports whether color should be suppressed.
+	_ = t.NoColor() // true for A11yNoColor and A11yFull
+}
+
+func ExampleA11yNone() {
+	// A11yNone is the default: Unicode symbols + full color.
+	t := DefaultTheme() // A11y defaults to A11yNone
+	_ = t.A11y          // A11yNone (0)
+}
+
+func ExampleA11yNoColor() {
+	// A11yNoColor suppresses color output, following the NO_COLOR spec.
+	t := DefaultTheme().WithA11y(A11yNoColor)
+	_ = t.NoColor() // true
+}
+
+func ExampleA11yFull() {
+	// A11yFull enables high-contrast theme + verbose label-only output.
+	t := DefaultTheme().WithA11y(A11yFull)
+	label := t.RenderSymbol("✓", "[OK]") // returns "[OK]" in A11yFull mode
+	_ = label
+}
+
+func ExampleA11yModeFromEnv() {
+	// Detect the a11y mode from RENSEI_A11Y / NO_COLOR env vars and embed
+	// into a Theme. Call once at startup; do not call per-render.
+	t := DefaultTheme().WithA11y(A11yModeFromEnv())
+	_ = t
+}
+
 func Example() {
 	// Intra-package composition: Theme struct, ActivityColors, and
 	// ActivityIcons layered on top of a style constructor and a
