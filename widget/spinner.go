@@ -14,12 +14,13 @@ var _ component.Component = (*Spinner)(nil)
 
 // Spinner is a themed animated spinner widget wrapping
 // charm.land/bubbles/v2/spinner. It implements component.Component and
-// renders the current frame using the accent color from the theme package.
+// renders the current frame using the accent color from the active theme.
 // When a label is set, the output is "<frame> <label>".
 type Spinner struct {
 	inner   spinner.Model
 	label   string
 	focused bool
+	t       theme.Theme
 }
 
 // SpinnerOption configures a Spinner during construction.
@@ -43,14 +44,29 @@ func WithSpinnerLabel(label string) SpinnerOption {
 	}
 }
 
+// WithSpinnerTheme sets the Theme used by the spinner for colors and styles.
+// Calling this option mid-render updates the internal theme; the next View
+// call uses the new theme.  The default is [theme.DefaultTheme].
+func WithSpinnerTheme(t theme.Theme) SpinnerOption {
+	return func(sp *Spinner) {
+		sp.t = t
+		sp.inner.Style = lipgloss.NewStyle().Foreground(t.Accent)
+	}
+}
+
 // NewSpinner constructs a Spinner. By default the spinner uses
 // spinner.Line, has no label, is focused (animating), and its frame is
-// styled with theme.SpinnerStyle.
+// styled with the accent color from the active theme.
+//
+// Pass [WithSpinnerTheme] to override the theme, or [WithTheme] (the universal
+// widget option) — both are accepted.
 func NewSpinner(opts ...SpinnerOption) *Spinner {
-	inner := spinner.New(spinner.WithStyle(theme.SpinnerStyle()))
+	t := theme.DefaultTheme()
+	inner := spinner.New(spinner.WithStyle(lipgloss.NewStyle().Foreground(t.Accent)))
 	s := &Spinner{
 		inner:   inner,
 		focused: true,
+		t:       t,
 	}
 	for _, opt := range opts {
 		opt(s)
@@ -66,6 +82,13 @@ func (s *Spinner) SetLabel(label string) {
 // SetStyle updates the Bubbles spinner animation style.
 func (s *Spinner) SetStyle(style spinner.Spinner) {
 	s.inner.Spinner = style
+}
+
+// SetTheme updates the theme used for rendering. The change takes effect on
+// the next call to View.
+func (s *Spinner) SetTheme(t theme.Theme) {
+	s.t = t
+	s.inner.Style = lipgloss.NewStyle().Foreground(t.Accent)
 }
 
 // Init returns the initial command that starts the spinner animation. It
@@ -89,16 +112,16 @@ func (s *Spinner) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return s, cmd
 }
 
-// View renders the spinner. The current frame is styled with
-// theme.SpinnerStyle. When a label is set, the output is
-// "<styled-frame> <styled-label>" where the label uses theme.TextPrimary;
+// View renders the spinner. The current frame is styled with the accent color
+// from the active theme. When a label is set, the output is
+// "<styled-frame> <styled-label>" where the label uses the theme's TextPrimary;
 // otherwise only the styled frame is rendered.
 func (s *Spinner) View() tea.View {
-	frame := theme.SpinnerStyle().Render(s.inner.View())
+	frame := lipgloss.NewStyle().Foreground(s.t.Accent).Render(s.inner.View())
 	if s.label == "" {
 		return tea.NewView(frame)
 	}
-	label := lipgloss.NewStyle().Foreground(theme.TextPrimary).Render(s.label)
+	label := lipgloss.NewStyle().Foreground(s.t.TextPrimary).Render(s.label)
 	return tea.NewView(frame + " " + label)
 }
 

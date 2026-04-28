@@ -98,6 +98,14 @@ type TabsSelectedMsg struct {
 // TabsOption configures a [Tabs] widget via the functional-options pattern.
 type TabsOption func(*Tabs)
 
+// WithTabsTheme sets the [theme.Theme] used by the tab bar for colors and
+// styles.  The default is [theme.DefaultTheme].
+func WithTabsTheme(th theme.Theme) TabsOption {
+	return func(t *Tabs) {
+		t.t = th
+	}
+}
+
 // WithActive sets the initial active tab index. Out-of-range values are
 // clamped to the valid range at construction time.
 func WithActive(idx int) TabsOption {
@@ -134,6 +142,7 @@ type Tabs struct {
 	focused    bool
 	wraparound bool
 	keyMap     TabsKeyMap
+	t          theme.Theme
 }
 
 // Compile-time assertion that *Tabs satisfies component.Component.
@@ -145,12 +154,19 @@ func NewTabs(items []TabsItem, opts ...TabsOption) *Tabs {
 	t := &Tabs{
 		items:  items,
 		keyMap: DefaultTabsKeyMap(),
+		t:      theme.DefaultTheme(),
 	}
 	for _, opt := range opts {
 		opt(t)
 	}
 	t.activeIdx = clampIndex(t.activeIdx, len(t.items))
 	return t
+}
+
+// SetTheme updates the theme used for rendering. The change takes effect on
+// the next call to View.
+func (t *Tabs) SetTheme(th theme.Theme) {
+	t.t = th
 }
 
 // Init satisfies [tea.Model]. The tab bar has no startup work.
@@ -236,7 +252,7 @@ func (t *Tabs) View() tea.View {
 // while keeping the active tab in view.
 func (t *Tabs) render() string {
 	if len(t.items) == 0 {
-		return theme.TabBar().Render("")
+		return t.tabBar().Render("")
 	}
 
 	titles := make([]string, len(t.items))
@@ -263,10 +279,10 @@ func (t *Tabs) render() string {
 // that sepMask[i] controls the gap between segment i and segment i+1.
 func (t *Tabs) renderWithTitles(titles []string, sepMask []bool) string {
 	if len(titles) == 0 {
-		return theme.TabBar().Render("")
+		return t.tabBar().Render("")
 	}
 
-	separator := theme.TabSeparator().Render(tabSeparatorGlyph)
+	separator := t.tabSeparator().Render(tabSeparatorGlyph)
 
 	var b strings.Builder
 	for i, title := range titles {
@@ -278,7 +294,37 @@ func (t *Tabs) renderWithTitles(titles []string, sepMask []bool) string {
 		b.WriteString(t.styleForIndex(i).Render(title))
 	}
 	bar := lipgloss.JoinHorizontal(lipgloss.Top, b.String())
-	return theme.TabBar().Render(bar)
+	return t.tabBar().Render(bar)
+}
+
+// tabBar returns the background style wrapping the entire tab bar,
+// derived from the active theme.
+func (t *Tabs) tabBar() lipgloss.Style {
+	return lipgloss.NewStyle().Background(t.t.Surface)
+}
+
+// tabSeparator returns the style for the separator glyph between tabs.
+func (t *Tabs) tabSeparator() lipgloss.Style {
+	return lipgloss.NewStyle().Foreground(t.t.SurfaceBorder)
+}
+
+// tabActive returns the style for the active tab.
+func (t *Tabs) tabActive() lipgloss.Style {
+	return lipgloss.NewStyle().
+		Foreground(t.t.TextPrimary).
+		Background(t.t.SurfaceRaised).
+		Bold(true).
+		Padding(0, 1)
+}
+
+// tabInactive returns the style for an inactive tab.
+func (t *Tabs) tabInactive() lipgloss.Style {
+	return lipgloss.NewStyle().Foreground(t.t.TextSecondary).Padding(0, 1)
+}
+
+// tabDisabled returns the style for a disabled tab.
+func (t *Tabs) tabDisabled() lipgloss.Style {
+	return lipgloss.NewStyle().Foreground(t.t.TextTertiary).Padding(0, 1)
 }
 
 // styleForIndex returns the lipgloss style that should wrap the tab
@@ -287,11 +333,11 @@ func (t *Tabs) renderWithTitles(titles []string, sepMask []bool) string {
 func (t *Tabs) styleForIndex(i int) lipgloss.Style {
 	switch {
 	case i == t.activeIdx:
-		return theme.TabActive()
+		return t.tabActive()
 	case i < len(t.items) && t.items[i].Disabled:
-		return theme.TabDisabled()
+		return t.tabDisabled()
 	default:
-		return theme.TabInactive()
+		return t.tabInactive()
 	}
 }
 
@@ -459,18 +505,18 @@ func dropNextSeparator(sepMask []bool) bool {
 func (t *Tabs) renderOverflow(titles []string, width int) string {
 	n := len(titles)
 	if n == 0 || width <= 0 {
-		return theme.TabBar().Render("")
+		return t.tabBar().Render("")
 	}
 	// The marker is rendered with the unpadded separator style so it
 	// stays exactly one display unit wide — padding on the regular
 	// tab styles would push it to three and make tiny widths
 	// unfriendly.
-	marker := theme.TabSeparator().Render(tabEllipsis)
+	marker := t.tabSeparator().Render(tabEllipsis)
 	markerWidth := lipgloss.Width(marker)
 
 	// Degenerate budgets: just the marker (or as much of it as fits).
 	if width <= markerWidth {
-		return theme.TabBar().Render(marker)
+		return t.tabBar().Render(marker)
 	}
 
 	active := clampIndex(t.activeIdx, n)
@@ -487,7 +533,7 @@ func (t *Tabs) renderOverflow(titles []string, width int) string {
 			subMask := fullSeparatorMask(len(sub))
 			rendered := t.renderWindow(sub, subMask, start)
 			if lipgloss.Width(rendered) <= budget {
-				return theme.TabBar().Render(
+				return t.tabBar().Render(
 					lipgloss.JoinHorizontal(lipgloss.Top, rendered, marker),
 				)
 			}
@@ -495,7 +541,7 @@ func (t *Tabs) renderOverflow(titles []string, width int) string {
 	}
 
 	// Nothing fit — emit only the marker.
-	return theme.TabBar().Render(marker)
+	return t.tabBar().Render(marker)
 }
 
 // renderWindow renders a slice of titles starting at global index
@@ -503,7 +549,7 @@ func (t *Tabs) renderOverflow(titles []string, width int) string {
 // honours the original item indices (so the active/disabled tabs keep
 // their styles even inside a window).
 func (t *Tabs) renderWindow(titles []string, sepMask []bool, offset int) string {
-	separator := theme.TabSeparator().Render(tabSeparatorGlyph)
+	separator := t.tabSeparator().Render(tabSeparatorGlyph)
 	var b strings.Builder
 	for i, title := range titles {
 		if i > 0 && i-1 < len(sepMask) && sepMask[i-1] {

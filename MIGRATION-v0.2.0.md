@@ -7,60 +7,126 @@ requires consumer action and the corresponding mechanical migration step.
 
 Consumers: `agentfactory-tui`, `rensei-tui`.
 
-> **Status:** skeleton — details fill in as REN-1319, REN-1330, REN-1331, REN-1332 land.
+> **Status:** REN-1319 (Theme struct + swap) landed. REN-1330, REN-1331, REN-1332 in progress.
 
 ---
 
-## 1. Theme system (REN-1319)
+## 1. Theme system (REN-1319) — LANDED
 
 ### What changed
 
 All top-level palette `var` declarations (`theme.BgPrimary`, `theme.Accent`, etc.)
-move into a `Theme` struct with constructor functions.  Widgets no longer read
-package-level vars; they accept a `Theme` via the `WithTheme` option.
+have been **removed** and replaced by a `Theme` struct in `theme/theme.go`.
+Widgets no longer read package-level vars; each widget carries its own `Theme` value
+and exposes a `WithXxxTheme` functional option and a `SetTheme` method for hot-swap.
+
+The universal `widget.WithTheme(t)` helper constructs a `ThemeOption` value whose
+per-widget converter methods (`.Spinner()`, `.Progressbar()`, `.Dialog()`, `.Tabs()`)
+return the correct per-widget option type:
+
+```go
+opt := widget.WithTheme(theme.DarkTheme())
+sp  := widget.NewSpinner(opt.Spinner())
+bar := widget.NewProgressbar(opt.Progressbar())
+```
 
 ### Migration steps
 
-**Before**
+**Step 1 — Custom style definitions**
 
 ```go
-import "github.com/RenseiAI/tui-components/theme"
-
-// Direct package-level color references
+// Before (v0.1.0) — package-level vars
 style := lipgloss.NewStyle().Background(theme.BgPrimary)
-```
 
-**After**
-
-```go
-import "github.com/RenseiAI/tui-components/theme"
-
+// After (v0.2.0) — Theme field
 t := theme.DefaultTheme()
 style := lipgloss.NewStyle().Background(t.BgPrimary)
 ```
 
-For widgets:
+**Step 2 — Widget construction**
 
 ```go
-// Before (implicit palette)
+// Before (v0.1.0) — implicit palette
 spinner := widget.NewSpinner()
 
-// After (explicit theme)
-spinner := widget.NewSpinner(widget.WithTheme(theme.DefaultTheme()))
+// After (v0.2.0) — explicit theme via per-widget option
+spinner := widget.NewSpinner(widget.WithSpinnerTheme(theme.DefaultTheme()))
+
+// Or via universal helper
+spinner := widget.NewSpinner(widget.WithTheme(theme.DefaultTheme()).Spinner())
+```
+
+**Step 3 — Theme hot-swap (new in v0.2.0)**
+
+```go
+sp := widget.NewSpinner()
+// ... later, when tenant theme changes ...
+sp.SetTheme(tenantTheme) // next View() call uses tenantTheme
 ```
 
 **Available theme constructors**
 
 | Constructor | Description |
 |---|---|
-| `theme.DefaultTheme()` | Current palette; zero migration cost |
-| `theme.DarkTheme()` | Explicit dark variant |
-| `theme.HighContrastTheme()` | A11y high-contrast |
+| `theme.DefaultTheme()` | Historic palette; zero migration cost for existing consumers |
+| `theme.DarkTheme()` | True-black dark variant for OLED/pure-black terminals |
+| `theme.HighContrastTheme()` | WCAG-AA high-contrast; also used with `RENSEI_A11Y=true` |
+
+**Backward-compat bridge (`theme.Default()`)**
+
+`theme.Default()` returns a `*theme.Theme` pointing at the package-level default
+(initialised to `DefaultTheme()`).  Legacy code that cannot be migrated immediately
+can read `theme.Default().BgPrimary` etc. without breaking; however, prefer the
+explicit-theme pattern for all new code.
+
+### Removed symbols
+
+The following package-level `var` declarations are gone.  Replace each reference
+with the corresponding `Theme` field:
+
+| Removed | Replacement |
+|---|---|
+| `theme.BgPrimary` | `t.BgPrimary` |
+| `theme.BgSecondary` | `t.BgSecondary` |
+| `theme.BgTertiary` | `t.BgTertiary` |
+| `theme.Surface` | `t.Surface` |
+| `theme.SurfaceRaised` | `t.SurfaceRaised` |
+| `theme.SurfaceBorder` | `t.SurfaceBorder` |
+| `theme.SurfaceBorderBright` | `t.SurfaceBorderBright` |
+| `theme.Accent` | `t.Accent` |
+| `theme.AccentDim` | `t.AccentDim` |
+| `theme.Teal` | `t.Teal` |
+| `theme.TealDim` | `t.TealDim` |
+| `theme.Blue` | `t.Blue` |
+| `theme.StatusSuccess` | `t.StatusSuccess` |
+| `theme.StatusWarning` | `t.StatusWarning` |
+| `theme.StatusError` | `t.StatusError` |
+| `theme.TextPrimary` | `t.TextPrimary` |
+| `theme.TextSecondary` | `t.TextSecondary` |
+| `theme.TextTertiary` | `t.TextTertiary` |
+
+Where `t` is a value obtained from `theme.DefaultTheme()` (or whichever variant you
+choose).
+
+### New symbols for downstream consumers (REN-1330, REN-1331, REN-1332)
+
+| Symbol | Package | Description |
+|---|---|---|
+| `theme.Theme` | `theme` | Value type carrying all color tokens |
+| `theme.DefaultTheme()` | `theme` | Default palette constructor |
+| `theme.DarkTheme()` | `theme` | Dark variant constructor |
+| `theme.HighContrastTheme()` | `theme` | High-contrast constructor |
+| `theme.Default()` | `theme` | Pointer to package-level default (bridge) |
+| `widget.WithTheme(t)` | `widget` | Universal ThemeOption builder |
+| `widget.WithSpinnerTheme(t)` | `widget` | SpinnerOption for theme |
+| `widget.WithProgressbarTheme(t)` | `widget` | ProgressbarOption for theme |
+| `widget.WithDialogTheme(t)` | `widget` | Dialog Option for theme |
+| `widget.WithTabsTheme(t)` | `widget` | TabsOption for theme |
 
 ### Scope
 
 - All `agentfactory-tui` and `rensei-tui` widget instantiation sites.
-- Custom `lipgloss.Style` definitions that reference `theme.*` package vars.
+- Custom `lipgloss.Style` definitions that reference old `theme.*` package vars.
 
 ---
 

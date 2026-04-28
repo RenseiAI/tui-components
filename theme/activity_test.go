@@ -42,10 +42,10 @@ func TestActivitySpotChecks(t *testing.T) {
 		wantIcon string
 	}{
 		{"thought", "\U0001f4ad"},
-		{"action", "\u26a1"},
+		{"action", "⚡"},
 		{"response", "\U0001f4ac"},
-		{"error", "\u2717"},
-		{"progress", "\u2713"},
+		{"error", "✗"},
+		{"progress", "✓"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.key, func(t *testing.T) {
@@ -59,11 +59,11 @@ func TestActivitySpotChecks(t *testing.T) {
 		key  string
 		want color.Color
 	}{
-		{"thought", TextSecondary},
-		{"action", Teal},
-		{"response", TextPrimary},
-		{"error", StatusError},
-		{"progress", StatusSuccess},
+		{"thought", pkg.TextSecondary},
+		{"action", pkg.Teal},
+		{"response", pkg.TextPrimary},
+		{"error", pkg.StatusError},
+		{"progress", pkg.StatusSuccess},
 	}
 	for _, cc := range colorChecks {
 		t.Run(cc.key+"-color", func(t *testing.T) {

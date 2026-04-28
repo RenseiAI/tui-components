@@ -59,6 +59,14 @@ type DialogDoneMsg struct {
 // Option configures a Dialog in the functional-options style.
 type Option func(*Dialog)
 
+// WithDialogTheme sets the [theme.Theme] used by the dialog for colors and
+// styles.  The default is [theme.DefaultTheme].
+func WithDialogTheme(t theme.Theme) Option {
+	return func(d *Dialog) {
+		d.t = t
+	}
+}
+
 // WithTitle sets the title shown at the top of the Dialog box.
 func WithTitle(title string) Option {
 	return func(d *Dialog) {
@@ -125,6 +133,9 @@ type Dialog struct {
 	focusIndex int
 	focused    bool
 	result     Result
+
+	// t is the active theme used for colors and styles.
+	t theme.Theme
 }
 
 // compile-time assertion that *Dialog satisfies component.Component.
@@ -145,6 +156,7 @@ func New(opts ...Option) *Dialog {
 		noLabel:     defaultNoLabel,
 		cancelLabel: defaultCancelLabel,
 		result:      ResultNone,
+		t:           theme.DefaultTheme(),
 	}
 	for _, opt := range opts {
 		opt(d)
@@ -240,7 +252,7 @@ func (d *Dialog) Overlay(background string) string {
 	}
 
 	// --- Dim the backdrop ------------------------------------------------
-	dimStyle := theme.Dimmed()
+	dimStyle := lipgloss.NewStyle().Foreground(d.t.TextTertiary)
 	bgLines := strings.Split(background, "\n")
 
 	// Ensure the backdrop fills the full viewport so the overlay has a
@@ -295,7 +307,7 @@ func (d *Dialog) renderBox() string {
 
 	var sections []string
 	if d.title != "" {
-		sections = append(sections, theme.SectionTitle().Render(d.title))
+		sections = append(sections, lipgloss.NewStyle().Foreground(d.t.TextPrimary).Bold(true).Render(d.title))
 	}
 	if d.body != "" {
 		body := d.body
@@ -313,7 +325,11 @@ func (d *Dialog) renderBox() string {
 	}
 
 	content := lipgloss.JoinVertical(lipgloss.Left, interleaveBlank(sections)...)
-	return theme.CardBorder().Render(content)
+	return lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(d.t.SurfaceBorder).
+		Padding(1, 2).
+		Render(content)
 }
 
 // SetSize stores the outer dimensions used for centering and body wrapping.
@@ -429,9 +445,9 @@ func (d *Dialog) renderButtons() string {
 func (d *Dialog) renderButton(btn Button, focused bool) string {
 	label := " " + btn.Label + " "
 	if focused {
-		return theme.HelpKey().Reverse(true).Render(label)
+		return lipgloss.NewStyle().Foreground(d.t.TextSecondary).Bold(true).Reverse(true).Render(label)
 	}
-	return theme.Muted().Render(label)
+	return lipgloss.NewStyle().Foreground(d.t.TextSecondary).Render(label)
 }
 
 // innerContentWidth returns the usable width for content inside the

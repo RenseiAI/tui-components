@@ -50,7 +50,7 @@ func GetWorkTypeColor(workType string) color.Color {
 	if c, ok := workTypeColors[strings.ToLower(workType)]; ok {
 		return c
 	}
-	return TextSecondary
+	return pkg.TextSecondary
 }
 
 // GetWorkTypeLabel returns the display label for a work type.

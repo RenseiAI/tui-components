@@ -17,18 +17,18 @@ type StatusStyle struct {
 func GetStatusStyle(status string) StatusStyle {
 	switch status {
 	case "working":
-		return StatusStyle{"Working", StatusSuccess, "\u25cf", true} // ●
+		return StatusStyle{"Working", pkg.StatusSuccess, "●", true} // ●
 	case "queued":
-		return StatusStyle{"Queued", StatusWarning, "\u25cc", true} // ◌
+		return StatusStyle{"Queued", pkg.StatusWarning, "◌", true} // ◌
 	case "parked":
-		return StatusStyle{"Parked", TextTertiary, "\u25cb", false} // ○
+		return StatusStyle{"Parked", pkg.TextTertiary, "○", false} // ○
 	case "completed":
-		return StatusStyle{"Done", StatusSuccess, "\u2713", false} // ✓
+		return StatusStyle{"Done", pkg.StatusSuccess, "✓", false} // ✓
 	case "failed":
-		return StatusStyle{"Failed", StatusError, "\u2717", false} // ✗
+		return StatusStyle{"Failed", pkg.StatusError, "✗", false} // ✗
 	case "stopped":
-		return StatusStyle{"Stopped", TextTertiary, "\u25a0", false} // ■
+		return StatusStyle{"Stopped", pkg.TextTertiary, "■", false} // ■
 	default:
-		return StatusStyle{"Unknown", TextSecondary, "?", false}
+		return StatusStyle{"Unknown", pkg.TextSecondary, "?", false}
 	}
 }

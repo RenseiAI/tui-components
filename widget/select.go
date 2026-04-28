@@ -325,11 +325,11 @@ func (d *selectDelegate) Render(w io.Writer, m list.Model, index int, item list.
 	var prefix string
 	if d.selectWidget.IsSelected(si.ID()) {
 		prefix = lipgloss.NewStyle().
-			Foreground(theme.StatusSuccess).
+			Foreground(theme.Default().StatusSuccess).
 			Render("✓ ")
 	} else {
 		prefix = lipgloss.NewStyle().
-			Foreground(theme.TextTertiary).
+			Foreground(theme.Default().TextTertiary).
 			Render("☐ ")
 	}
 
@@ -342,34 +342,34 @@ func themedItemStyles() list.DefaultItemStyles {
 	var s list.DefaultItemStyles
 
 	s.NormalTitle = lipgloss.NewStyle().
-		Foreground(theme.TextPrimary).
+		Foreground(theme.Default().TextPrimary).
 		Padding(0, 0, 0, 2) //nolint:mnd // visual padding
 
 	s.NormalDesc = lipgloss.NewStyle().
-		Foreground(theme.TextSecondary).
+		Foreground(theme.Default().TextSecondary).
 		Padding(0, 0, 0, 2) //nolint:mnd // visual padding
 
 	s.SelectedTitle = lipgloss.NewStyle().
-		Foreground(theme.TextPrimary).
-		Background(theme.SurfaceRaised).
+		Foreground(theme.Default().TextPrimary).
+		Background(theme.Default().SurfaceRaised).
 		Padding(0, 0, 0, 2). //nolint:mnd // visual padding
 		Bold(true)
 
 	s.SelectedDesc = lipgloss.NewStyle().
-		Foreground(theme.TextSecondary).
-		Background(theme.SurfaceRaised).
+		Foreground(theme.Default().TextSecondary).
+		Background(theme.Default().SurfaceRaised).
 		Padding(0, 0, 0, 2) //nolint:mnd // visual padding
 
 	s.DimmedTitle = lipgloss.NewStyle().
-		Foreground(theme.TextTertiary).
+		Foreground(theme.Default().TextTertiary).
 		Padding(0, 0, 0, 2) //nolint:mnd // visual padding
 
 	s.DimmedDesc = lipgloss.NewStyle().
-		Foreground(theme.TextTertiary).
+		Foreground(theme.Default().TextTertiary).
 		Padding(0, 0, 0, 2) //nolint:mnd // visual padding
 
 	s.FilterMatch = lipgloss.NewStyle().
-		Foreground(theme.Accent).
+		Foreground(theme.Default().Accent).
 		Bold(true)
 
 	return s
@@ -380,40 +380,40 @@ func applyListStyles(m *list.Model) {
 	styles := list.DefaultStyles(true)
 
 	styles.TitleBar = lipgloss.NewStyle().
-		Background(theme.Surface).
+		Background(theme.Default().Surface).
 		Padding(0, 1) //nolint:mnd // visual padding
 
 	styles.Title = theme.Header()
 
 	styles.StatusBar = lipgloss.NewStyle().
-		Foreground(theme.TextSecondary).
-		Background(theme.Surface).
+		Foreground(theme.Default().TextSecondary).
+		Background(theme.Default().Surface).
 		Padding(0, 1) //nolint:mnd // visual padding
 
 	styles.StatusEmpty = lipgloss.NewStyle().
-		Foreground(theme.TextTertiary)
+		Foreground(theme.Default().TextTertiary)
 
 	styles.StatusBarActiveFilter = lipgloss.NewStyle().
-		Foreground(theme.Accent)
+		Foreground(theme.Default().Accent)
 
 	styles.StatusBarFilterCount = lipgloss.NewStyle().
-		Foreground(theme.TextTertiary)
+		Foreground(theme.Default().TextTertiary)
 
 	styles.NoItems = lipgloss.NewStyle().
-		Foreground(theme.TextTertiary)
+		Foreground(theme.Default().TextTertiary)
 
 	styles.HelpStyle = lipgloss.NewStyle().
-		Foreground(theme.TextTertiary).
+		Foreground(theme.Default().TextTertiary).
 		Padding(1, 0, 0, 2) //nolint:mnd // visual padding
 
 	styles.ActivePaginationDot = lipgloss.NewStyle().
-		Foreground(theme.Accent)
+		Foreground(theme.Default().Accent)
 
 	styles.InactivePaginationDot = lipgloss.NewStyle().
-		Foreground(theme.TextTertiary)
+		Foreground(theme.Default().TextTertiary)
 
 	styles.DefaultFilterCharacterMatch = lipgloss.NewStyle().
-		Foreground(theme.Accent).
+		Foreground(theme.Default().Accent).
 		Bold(true)
 
 	m.Styles = styles
