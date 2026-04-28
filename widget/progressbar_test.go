@@ -266,7 +266,7 @@ func TestProgressbar_WithGradient_RendersDistinctly(t *testing.T) {
 
 	customBar := widget.NewProgressbar(
 		widget.WithProgressbarWidth(40),
-		widget.WithProgressbarGradient(theme.StatusSuccess, theme.StatusWarning),
+		widget.WithProgressbarGradient(theme.Default().StatusSuccess, theme.Default().StatusWarning),
 	)
 	customBar.SetPercent(0.5)
 	custom := customBar.View().Content

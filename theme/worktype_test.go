@@ -25,8 +25,8 @@ func TestGetWorkTypeColor(t *testing.T) {
 
 	t.Run("unknown", func(t *testing.T) {
 		got := GetWorkTypeColor("not-a-real-worktype")
-		if !sameColor(got, TextSecondary) {
-			t.Errorf("GetWorkTypeColor(unknown) = %v, want TextSecondary", got)
+		if !sameColor(got, pkg.TextSecondary) {
+			t.Errorf("GetWorkTypeColor(unknown) = %v, want pkg.TextSecondary", got)
 		}
 	})
 }

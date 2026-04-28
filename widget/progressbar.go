@@ -123,10 +123,22 @@ type Progressbar struct {
 	generation int
 
 	focused bool
+
+	// t is the active theme used for colors and styles.
+	t theme.Theme
 }
 
 // ProgressbarOption configures a Progressbar at construction time.
 type ProgressbarOption func(*Progressbar)
+
+// WithProgressbarTheme sets the [theme.Theme] used by the bar for colors and
+// styles.  Calling this option mid-render updates the internal theme; the next
+// View call uses the new theme.  The default is [theme.DefaultTheme].
+func WithProgressbarTheme(t theme.Theme) ProgressbarOption {
+	return func(p *Progressbar) {
+		p.t = t
+	}
+}
 
 // WithProgressbarWidth sets the rendered width in cells. Negative values are
 // clamped to zero, in which case the bar renders an empty string until
@@ -141,7 +153,7 @@ func WithProgressbarWidth(w int) ProgressbarOption {
 }
 
 // WithProgressbarGradient overrides the default gradient. The default is
-// theme.Teal to theme.Accent; pass any two lipgloss-compatible colors to
+// theme.Default().Teal to theme.Default().Accent; pass any two lipgloss-compatible colors to
 // customize. The gradient is applied across the full bar width.
 func WithProgressbarGradient(from, to color.Color) ProgressbarOption {
 	return func(p *Progressbar) {
@@ -209,17 +221,19 @@ func WithProgressbarIndeterminate(b bool) ProgressbarOption {
 }
 
 // NewProgressbar constructs a Progressbar. By default the bar is 40 cells
-// wide, fills with a theme.Teal -> theme.Accent gradient, starts at 0%
+// wide, fills with a theme.Default().Teal -> theme.Default().Accent gradient, starts at 0%
 // progress, and renders no label, percentage, or ETA. Apply
 // ProgressbarOptions to customize width, gradient, label, percentage, and
 // ETA display.
 func NewProgressbar(opts ...ProgressbarOption) *Progressbar {
+	t := theme.DefaultTheme()
 	p := &Progressbar{
-		fromColor: theme.Teal,
-		toColor:   theme.Accent,
+		fromColor: t.Teal,
+		toColor:   t.Accent,
 		width:     defaultProgressbarWidth,
 		focused:   true,
 		nowFn:     time.Now,
+		t:         t,
 	}
 	for _, opt := range opts {
 		opt(p)
@@ -230,6 +244,12 @@ func NewProgressbar(opts ...ProgressbarOption) *Progressbar {
 		progress.WithWidth(p.width),
 	)
 	return p
+}
+
+// SetTheme updates the theme used for rendering. The change takes effect on
+// the next call to View.
+func (p *Progressbar) SetTheme(t theme.Theme) {
+	p.t = t
 }
 
 // SetPercent sets the displayed progress to v, clamped to [0, 1]. NaN inputs
@@ -413,14 +433,14 @@ func (p *Progressbar) composeRow(keepLabel, keepPercent, keepETA bool, percentTe
 	parts := make([]string, 0, 4)
 	if keepLabel {
 		label := truncateLabel(p.label, p.labelBudget(barWidth, percentText, etaText, keepPercent, keepETA))
-		parts = append(parts, lipgloss.NewStyle().Foreground(theme.TextPrimary).Render(label))
+		parts = append(parts, lipgloss.NewStyle().Foreground(p.t.TextPrimary).Render(label))
 	}
 	parts = append(parts, bar)
 	if keepPercent {
-		parts = append(parts, lipgloss.NewStyle().Foreground(theme.TextSecondary).Render(percentText))
+		parts = append(parts, lipgloss.NewStyle().Foreground(p.t.TextSecondary).Render(percentText))
 	}
 	if keepETA {
-		parts = append(parts, lipgloss.NewStyle().Foreground(theme.TextSecondary).Render(etaText))
+		parts = append(parts, lipgloss.NewStyle().Foreground(p.t.TextSecondary).Render(etaText))
 	}
 	return strings.Join(parts, " ")
 }
@@ -446,8 +466,8 @@ func (p *Progressbar) renderSweep(width int) string {
 		pos = ((p.sweepStep % width) + width) % width
 	}
 
-	litStyle := lipgloss.NewStyle().Foreground(theme.Teal)
-	bgStyle := lipgloss.NewStyle().Foreground(theme.SurfaceBorder)
+	litStyle := lipgloss.NewStyle().Foreground(p.t.Teal)
+	bgStyle := lipgloss.NewStyle().Foreground(p.t.SurfaceBorder)
 
 	var b strings.Builder
 	b.Grow(width * 2)

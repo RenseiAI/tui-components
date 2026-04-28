@@ -164,7 +164,7 @@ func (t TextInput) Err() error {
 func fieldStyle() lipgloss.Style {
 	return lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
-		BorderForeground(theme.SurfaceBorder).
+		BorderForeground(theme.Default().SurfaceBorder).
 		Padding(0, 1)
 }
 

@@ -13,11 +13,15 @@ Architecture-aware primitives milestone. All items below land via dependent issu
 
 ### Breaking changes
 
-- **Theme system overhaul (REN-1319):** `theme.BgPrimary`, `theme.Accent`, and all
-  palette-level `var` declarations move into a swappable `Theme` struct.
-  Every widget that reads palette vars directly must be updated to accept a `Theme`
-  via `widget.WithTheme(t)`.  A `DefaultTheme()` constructor preserves the current
-  palette so existing consumers can migrate with a one-line change.
+- **Theme system overhaul (REN-1319) — LANDED:** `theme.BgPrimary`, `theme.Accent`, and all
+  palette-level `var` declarations have been removed and replaced by a swappable `Theme`
+  struct in `theme/theme.go`.  Every widget accepts a theme via per-widget `WithXxxTheme`
+  options (e.g. `WithSpinnerTheme`, `WithProgressbarTheme`) and the universal
+  `widget.WithTheme(t).Spinner()` / `.Progressbar()` / `.Dialog()` / `.Tabs()` helpers.
+  `DefaultTheme()`, `DarkTheme()`, and `HighContrastTheme()` constructors are provided.
+  Hot-swap is supported: call `SetTheme(t)` on any widget instance to update mid-render.
+  `theme.Default()` returns a pointer to the package-level default Theme for legacy callers.
+  See `MIGRATION-v0.2.0.md §1` for the mechanical migration steps.
 
 - **Open capability registries (REN-1330):** `theme.GetStatusStyle`,
   `theme.GetWorkTypeColor`, and `theme.GetActivityIcon` previously used closed

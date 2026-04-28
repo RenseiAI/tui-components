@@ -56,27 +56,12 @@ var themeStyleConstructors = map[string]bool{
 
 // themePackageLevelCovered are exported vars/maps covered by the
 // package-level theme.Example rather than a dedicated ExampleName.
+// v0.2.0: package-level palette vars (BgPrimary, Accent, etc.) were
+// removed in favour of the Theme struct; ActivityColors/Icons remain
+// as vars initialised from the default theme.
 var themePackageLevelCovered = map[string]bool{
-	"BgPrimary":           true,
-	"BgSecondary":         true,
-	"BgTertiary":          true,
-	"Surface":             true,
-	"SurfaceRaised":       true,
-	"SurfaceBorder":       true,
-	"SurfaceBorderBright": true,
-	"Accent":              true,
-	"AccentDim":           true,
-	"Teal":                true,
-	"TealDim":             true,
-	"Blue":                true,
-	"StatusSuccess":       true,
-	"StatusWarning":       true,
-	"StatusError":         true,
-	"TextPrimary":         true,
-	"TextSecondary":       true,
-	"TextTertiary":        true,
-	"ActivityColors":      true,
-	"ActivityIcons":       true,
+	"ActivityColors": true,
+	"ActivityIcons":  true,
 }
 
 func TestExportedSymbolsHaveExamples(t *testing.T) {

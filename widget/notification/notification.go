@@ -162,31 +162,31 @@ func defaultIcon(v Variant) string {
 }
 
 // variantColor returns the foreground/border color for v. Unknown
-// variants fall back to theme.TextSecondary.
+// variants fall back to theme.Default().TextSecondary.
 func variantColor(v Variant) color.Color {
 	switch v {
 	case VariantSuccess:
-		return theme.StatusSuccess
+		return theme.Default().StatusSuccess
 	case VariantWarning:
-		return theme.StatusWarning
+		return theme.Default().StatusWarning
 	case VariantError:
-		return theme.StatusError
+		return theme.Default().StatusError
 	default:
-		return theme.TextSecondary
+		return theme.Default().TextSecondary
 	}
 }
 
 // styleFor returns the lipgloss style used to render a notification of
 // the given variant at the given outer width. The style draws a rounded
 // border in the variant color and renders the body text in
-// theme.TextPrimary. The outer width includes the border and padding;
+// theme.Default().TextPrimary. The outer width includes the border and padding;
 // see [lipgloss.Style.Width] for exact semantics.
 func styleFor(v Variant, outerWidth int) lipgloss.Style {
 	c := variantColor(v)
 	s := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(c).
-		Foreground(theme.TextPrimary).
+		Foreground(theme.Default().TextPrimary).
 		Padding(0, 1)
 	if outerWidth > 0 {
 		s = s.Width(outerWidth)

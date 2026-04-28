@@ -11,13 +11,13 @@ func TestGetStatusStyle(t *testing.T) {
 		status string
 		want   StatusStyle
 	}{
-		{"working", "working", StatusStyle{Label: "Working", Color: StatusSuccess, Symbol: "\u25cf", Animate: true}},
-		{"queued", "queued", StatusStyle{Label: "Queued", Color: StatusWarning, Symbol: "\u25cc", Animate: true}},
-		{"parked", "parked", StatusStyle{Label: "Parked", Color: TextTertiary, Symbol: "\u25cb", Animate: false}},
-		{"completed", "completed", StatusStyle{Label: "Done", Color: StatusSuccess, Symbol: "\u2713", Animate: false}},
-		{"failed", "failed", StatusStyle{Label: "Failed", Color: StatusError, Symbol: "\u2717", Animate: false}},
-		{"stopped", "stopped", StatusStyle{Label: "Stopped", Color: TextTertiary, Symbol: "\u25a0", Animate: false}},
-		{"unknown", "not-a-real-status", StatusStyle{Label: "Unknown", Color: TextSecondary, Symbol: "?", Animate: false}},
+		{"working", "working", StatusStyle{Label: "Working", Color: pkg.StatusSuccess, Symbol: "●", Animate: true}},
+		{"queued", "queued", StatusStyle{Label: "Queued", Color: pkg.StatusWarning, Symbol: "◌", Animate: true}},
+		{"parked", "parked", StatusStyle{Label: "Parked", Color: pkg.TextTertiary, Symbol: "○", Animate: false}},
+		{"completed", "completed", StatusStyle{Label: "Done", Color: pkg.StatusSuccess, Symbol: "✓", Animate: false}},
+		{"failed", "failed", StatusStyle{Label: "Failed", Color: pkg.StatusError, Symbol: "✗", Animate: false}},
+		{"stopped", "stopped", StatusStyle{Label: "Stopped", Color: pkg.TextTertiary, Symbol: "■", Animate: false}},
+		{"unknown", "not-a-real-status", StatusStyle{Label: "Unknown", Color: pkg.TextSecondary, Symbol: "?", Animate: false}},
 	}
 
 	for _, tt := range tests {
