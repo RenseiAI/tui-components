@@ -1,10 +1,11 @@
 package theme
 
-import (
-	"image/color"
-)
+import "image/color"
 
 // StatusStyle defines the visual representation of a session status.
+// The canonical set of built-in status kinds is pre-registered in
+// [GlobalRegistry] at package init.  Third-party callers can register
+// additional kinds with [Registry.RegisterStatus].
 type StatusStyle struct {
 	Label   string
 	Color   color.Color
@@ -13,22 +14,25 @@ type StatusStyle struct {
 }
 
 // GetStatusStyle returns the visual style for a session status string.
-// Known statuses: "working", "queued", "parked", "completed", "failed", "stopped".
+// It queries [GlobalRegistry] for the kind; if the kind is not registered,
+// it returns a fallback style with a "?" symbol and the label "Unknown".
+//
+// Built-in statuses: "working", "queued", "parked", "completed", "failed",
+// "stopped".  Plugins register additional kinds with
+// [Registry.RegisterStatus].
 func GetStatusStyle(status string) StatusStyle {
-	switch status {
-	case "working":
-		return StatusStyle{"Working", pkg.StatusSuccess, "●", true} // ●
-	case "queued":
-		return StatusStyle{"Queued", pkg.StatusWarning, "◌", true} // ◌
-	case "parked":
-		return StatusStyle{"Parked", pkg.TextTertiary, "○", false} // ○
-	case "completed":
-		return StatusStyle{"Done", pkg.StatusSuccess, "✓", false} // ✓
-	case "failed":
-		return StatusStyle{"Failed", pkg.StatusError, "✗", false} // ✗
-	case "stopped":
-		return StatusStyle{"Stopped", pkg.TextTertiary, "■", false} // ■
-	default:
-		return StatusStyle{"Unknown", pkg.TextSecondary, "?", false}
+	if e, ok := GlobalRegistry.GetStatus(status); ok {
+		return StatusStyle{
+			Label:   e.Label,
+			Color:   e.Color,
+			Symbol:  e.Symbol,
+			Animate: e.Animate,
+		}
+	}
+	return StatusStyle{
+		Label:   "Unknown",
+		Color:   pkg.TextSecondary,
+		Symbol:  "?",
+		Animate: false,
 	}
 }

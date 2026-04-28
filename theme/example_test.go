@@ -145,11 +145,54 @@ func ExampleA11yModeFromEnv() {
 	_ = t
 }
 
+func ExampleGetActivityColor() {
+	// GetActivityColor queries GlobalRegistry and returns a fallback color
+	// for unknown kinds. Compile-only: image/color.Color does not format
+	// cleanly for verified output.
+	_ = GetActivityColor("action")
+	_ = GetActivityColor("unknown-activity") // → pkg.TextSecondary fallback
+}
+
+func ExampleGetActivityIcon() {
+	fmt.Println(GetActivityIcon("error"))
+	fmt.Println(GetActivityIcon("progress"))
+	fmt.Println(GetActivityIcon("unknown-activity")) // fallback → "?"
+	// Output:
+	// ✗
+	// ✓
+	// ?
+}
+
 func Example() {
-	// Intra-package composition: Theme struct, ActivityColors, and
-	// ActivityIcons layered on top of a style constructor and a
-	// StatusStyle lookup.
+	// Intra-package composition: Theme struct, ActivityColors,
+	// ActivityIcons, GlobalRegistry, and StatusStyle working together.
+	// Sweeps: StatusEntry, WorkTypeEntry, ActivityEntry, Registry,
+	// GlobalRegistry.
 	t := DefaultTheme()
+
+	// Register a custom status kind at activation time (plugin pattern).
+	GlobalRegistry.RegisterStatus(StatusEntry{
+		Kind:    "workarea-warming",
+		Label:   "Warming pool",
+		Symbol:  "↻",
+		Color:   t.StatusInfo,
+		Animate: true,
+	})
+
+	// Register a custom work-type kind.
+	GlobalRegistry.RegisterWorkType(WorkTypeEntry{
+		Kind:  "workarea-acquire",
+		Label: "Acquire",
+		Color: t.Teal,
+	})
+
+	// Register a custom activity kind.
+	GlobalRegistry.RegisterActivity(ActivityEntry{
+		Kind:  "tool-call",
+		Icon:  "⚙",
+		Color: t.Blue,
+	})
+
 	status := GetStatusStyle("working")
 	titleStyle := Header()
 	activityStyle := lipgloss.NewStyle().
