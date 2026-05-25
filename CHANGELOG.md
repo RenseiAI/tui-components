@@ -8,12 +8,11 @@ For the full release workflow, see `RELEASING.md`.
 
 ## [v0.2.0] — 2026-04-28
 
-Architecture-aware primitives milestone. All items below land via dependent issues
-(REN-1319, REN-1330, REN-1331, REN-1332) in a single coordinated breaking-change release.
+Architecture-aware primitives milestone. All items below land in a single coordinated breaking-change release.
 
 ### Breaking changes
 
-- **Theme system overhaul (REN-1319) — LANDED:** `theme.BgPrimary`, `theme.Accent`, and all
+- **Theme system overhaul — LANDED:** `theme.BgPrimary`, `theme.Accent`, and all
   palette-level `var` declarations have been removed and replaced by a swappable `Theme`
   struct in `theme/theme.go`.  Every widget accepts a theme via per-widget `WithXxxTheme`
   options (e.g. `WithSpinnerTheme`, `WithProgressbarTheme`) and the universal
@@ -23,7 +22,7 @@ Architecture-aware primitives milestone. All items below land via dependent issu
   `theme.Default()` returns a pointer to the package-level default Theme for legacy callers.
   See `MIGRATION-v0.2.0.md §1` for the mechanical migration steps.
 
-- **Open capability registries (REN-1330) — LANDED:** `theme.GetStatusStyle`,
+- **Open capability registries — LANDED:** `theme.GetStatusStyle`,
   `theme.GetWorkTypeColor`, and `theme.GetActivityIcon` previously used closed
   switch / map literals over a fixed set of string keys.  These are replaced by
   a thread-safe open registry API backed by `theme.GlobalRegistry` (`*Registry`).
@@ -39,7 +38,7 @@ Architecture-aware primitives milestone. All items below land via dependent issu
   vars are retained (deprecated) for backward compat.  Tests assert no closed
   switches remain (`TestNoClosedSwitches`).
 
-### New primitives — architecture-concept layer (REN-1331) — LANDED
+### New primitives — architecture-concept layer — LANDED
 
 Primitives from `014-tui-operator-surfaces.md`.  All 13 widgets shipped in
 `widget/` with tests and godoc examples.  Each accepts `WithXxxTheme(t)` for
@@ -63,7 +62,7 @@ theme swap and exposes `AccessibleLabel()` + `WithXxxNoColor(true)` for a11y:
 | `PolicyDecisionBanner` | `policy_decision_banner.go` | Layer 6 | allowed/blocked/needs-approval banner |
 | `CostPanel` | `cost_panel.go` | Layer 6 / `006` | Per-session/issue/tenant cost breakdown with trend |
 
-### New format helpers (REN-1332) — LANDED
+### New format helpers — LANDED
 
 | Helper | Description |
 |---|---|
@@ -73,7 +72,7 @@ theme swap and exposes `AccessibleLabel()` + `WithXxxNoColor(true)` for a11y:
 | `format.ToolchainSpec` | `"java=17, node=20"` multi-toolchain rendering |
 | `format.HumanLabel[T]` | Generic typed-flag → human-readable string lookup |
 
-### Accessibility opt-in (REN-1332) — LANDED
+### Accessibility opt-in — LANDED
 
 - `theme.A11yMode` type on the `Theme` struct; three values: `A11yNone` (default),
   `A11yNoColor` (color suppressed, Unicode symbols kept), `A11yFull` (verbose ASCII labels +
