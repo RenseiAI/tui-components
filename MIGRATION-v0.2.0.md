@@ -7,11 +7,11 @@ requires consumer action and the corresponding mechanical migration step.
 
 Consumers: `agentfactory-tui`, `rensei-tui`.
 
-> **Status:** REN-1319 (Theme struct + swap) landed. REN-1330, REN-1331, REN-1332 in progress.
+> **Status:** Theme struct + swap landed. Capability registries, architecture-concept primitives, and format helpers + accessibility in progress.
 
 ---
 
-## 1. Theme system (REN-1319) — LANDED
+## 1. Theme system — LANDED
 
 ### What changed
 
@@ -108,7 +108,7 @@ with the corresponding `Theme` field:
 Where `t` is a value obtained from `theme.DefaultTheme()` (or whichever variant you
 choose).
 
-### New symbols for downstream consumers (REN-1330, REN-1331, REN-1332)
+### New symbols for downstream consumers
 
 | Symbol | Package | Description |
 |---|---|---|
@@ -130,7 +130,7 @@ choose).
 
 ---
 
-## 2. Open capability registries (REN-1330)
+## 2. Open capability registries
 
 ### What changed
 
@@ -166,7 +166,7 @@ func init() {
 
 ---
 
-## 3. Architecture-concept primitives (REN-1331)
+## 3. Architecture-concept primitives
 
 ### What changed
 
@@ -181,7 +181,7 @@ No existing code breaks.  Adopt primitives as you build new panels.
 
 ---
 
-## 4. Format helpers (REN-1332)
+## 4. Format helpers
 
 ### What changed
 
@@ -198,7 +198,7 @@ helpers for consistency.
 
 ---
 
-## 5. Accessibility opt-in (REN-1332)
+## 5. Accessibility opt-in
 
 ### What changed
 
