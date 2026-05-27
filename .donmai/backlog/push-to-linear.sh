@@ -1,6 +1,6 @@
 #!/bin/bash
 # Push tui-components backlog issues to Linear icebox
-# Usage: export $(grep -v '^#' /path/to/.env.local | grep -v '^$' | xargs) && bash .agentfactory/backlog/push-to-linear.sh
+# Usage: export $(grep -v '^#' /path/to/.env.local | grep -v '^$' | xargs) && bash .donmai/backlog/push-to-linear.sh
 
 set -uo pipefail
 
