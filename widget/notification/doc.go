@@ -1,5 +1,5 @@
 // Package notification provides a transient toast widget for the
-// AgentFactory and Rensei TUI applications.
+// Donmai and Rensei TUI applications.
 //
 // A [Model] renders a single auto-dismissing status message in one of
 // three variants — [VariantSuccess], [VariantWarning], or [VariantError]

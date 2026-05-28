@@ -1,5 +1,5 @@
 // Package widget provides shared Bubble Tea UI components
-// for the AgentFactory and Rensei TUI applications.
+// for the Donmai and Rensei TUI applications.
 //
 // # Widgets
 //

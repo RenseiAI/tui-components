@@ -5,7 +5,7 @@ open capability registries, architecture-concept primitives, format helpers, and
 accessibility opt-in in a single push.  The sections below list every change that
 requires consumer action and the corresponding mechanical migration step.
 
-Consumers: `agentfactory-tui`, `rensei-tui`.
+Consumers: `donmai`, `rensei-tui`.
 
 > **Status:** Theme struct + swap landed. Capability registries, architecture-concept primitives, and format helpers + accessibility in progress.
 
@@ -125,7 +125,7 @@ choose).
 
 ### Scope
 
-- All `agentfactory-tui` and `rensei-tui` widget instantiation sites.
+- All `donmai` and `rensei-tui` widget instantiation sites.
 - Custom `lipgloss.Style` definitions that reference old `theme.*` package vars.
 
 ---
@@ -222,7 +222,7 @@ For new views, populate `AccessibleLabel` on all architecture-concept primitives
 
 - [ ] Bump `go.mod` to `github.com/RenseiAI/tui-components v0.2.0`.
 - [ ] Replace all `theme.<PaletteVar>` references with `t.<PaletteVar>` from a
-      `theme.DefaultTheme()` (or other) instance — **agentfactory-tui**.
+      `theme.DefaultTheme()` (or other) instance — **donmai**.
 - [ ] Replace all `theme.<PaletteVar>` references with `t.<PaletteVar>` from a
       `theme.DefaultTheme()` instance — **rensei-tui**.
 - [ ] Add `widget.WithTheme(t)` to all widget constructors — both consumers.

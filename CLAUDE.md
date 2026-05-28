@@ -1,6 +1,6 @@
 # tui-components
 
-OSS shared TUI component library for the AgentFactory ecosystem.
+OSS shared TUI component library for the Donmai and Rensei ecosystem.
 
 **Module**: `github.com/RenseiAI/tui-components`
 
