@@ -104,7 +104,7 @@ func TestCost(t *testing.T) {
 }
 
 // TestCostEdgeCases asserts the ratified behavior of Cost for edge-case
-// inputs (REN-985 / TC-011.6):
+// inputs:
 //   - negative values, NaN, and ±Inf all render as "--"
 //   - the million-dollar abbreviation was deferred; 1_000_000.0 still
 //     renders with two decimal places as "$1000000.00"

@@ -91,8 +91,13 @@ line in your report.
   takes precedence over `NO_COLOR`). It is current public API and a known
   debrand candidate — do not rename it yourself; renaming needs an ADR plus a
   deprecation window.
-- No automated leak guard exists in this repo — this section is the guard;
-  re-read it before pushing anything that ships (README, godoc, examples).
+- `scripts/guard-b-lint.sh` (vendored from `donmai-architecture`; see its
+  header) runs this boundary as an automated check — self-test + `--all` in
+  CI on every push and PR, `--commits`/`--stdin` scoped to what a PR actually
+  adds. This section remains the guard for a contributor reading before they
+  push: the checked-in `.guard-allowlist` narrows the automated guard to the
+  specific lines that legitimately name a banned token — re-read both before
+  pushing anything that ships (README, godoc, examples).
 
 ## Gotchas
 

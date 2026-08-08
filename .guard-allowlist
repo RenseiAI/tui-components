@@ -1,0 +1,44 @@
+# guard-b allowlist for tui-components — same grammar as the engine's own
+# header (scripts/guard-b-lint.sh), three or four ' :: '-separated fields:
+#
+#     <RULE_ID>[,<RULE_ID>...] :: <location-regex> :: <match-regex>[ :: <line-regex>]
+#
+# match-regex binds THE TEXT THE RULE MATCHED, not the surrounding line — see
+# scripts/guard-b-lint.sh's header for why. Single-occurrence hits are pinned
+# to their exact line; a token repeated many times for one settled reason (the
+# RENS[E]I_A11Y block below) is scoped to its file list instead, still bound to
+# the specific identifier so an unrelated closed var on the same file would
+# still fail the guard.
+#
+# NOTE ON THE [BRACKETS]: this file is itself scanned, so every entry below
+# spells the banned literal with one bracketed letter (`Rens[e]i`, `rens[e]i-tui`)
+# — the same convention scripts/guard-b-lint.sh and its own .guard-allowlist
+# use. This changes nothing about what is matched at scan time.
+
+# --- Parent-brand attribution: copyright + package docs ---------------------
+BRAND_NAME :: ^LICENSE:3$ :: Rens[e]i
+BRAND_NAME :: ^widget/capability_chip\.go:18$ :: Rens[e]i
+BRAND_NAME :: ^widget/doc\.go:2$ :: Rens[e]i
+BRAND_NAME :: ^widget/notification/doc\.go:2$ :: Rens[e]i
+
+# --- This library is the shared TUI seam: named consumer of both the OSS ----
+# `donmai` binary AND the closed `rens[e]i-tui` binary (see repo AGENTS.md
+# "Go, module github.com/RenseiAI/tui-components... consumed by donmai and
+# rens[e]i-tui"). Naming the closed consumer in the migration guide and the
+# worktree-creation helper documents that seam, the same case
+# donmai-architecture/.guard-allowlist carves out for its own
+# ADR-2026-06-03-injectable-state-dir.md.
+CLOSED_TUI_REPO :: ^MIGRATION-v0\.2\.0\.md:8$ :: rens[e]i-tui
+CLOSED_TUI_REPO :: ^MIGRATION-v0\.2\.0\.md:128$ :: rens[e]i-tui
+CLOSED_TUI_REPO :: ^MIGRATION-v0\.2\.0\.md:227$ :: rens[e]i-tui
+CLOSED_TUI_REPO :: ^scripts/create-worktree\.sh:2$ :: rens[e]i-tui
+
+# --- RENS[E]I_A11Y: this library's OWN shipped, public env var ----------------
+# Predates the OSS/closed split (AGENTS.md: "NEVER rename RENS[E]I_A11Y ->
+# instead: open an ADR" — the org has already ruled this name frozen, not a
+# leak). CLOSED_ENV_VAR exists to catch a PLATFORM env var leaking into OSS;
+# this is the inverse — an OSS-shipped var whose name happens to start with
+# the same four letters. Bound to the exact identifier prefix the rule
+# captures (`RENS[E]I_A`, since the rule's char class stops before the digit in
+# `11Y`), scoped to the files that actually reference it.
+CLOSED_ENV_VAR :: ^(AGENTS\.md|CHANGELOG\.md|MIGRATION-v0\.2\.0\.md|docs/v0\.2\.0-scope\.md|theme/a11y\.go|theme/a11y_test\.go|theme/example_test\.go|theme/theme\.go):[0-9]+$ :: RENS[E]I_A

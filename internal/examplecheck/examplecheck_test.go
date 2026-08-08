@@ -1,4 +1,4 @@
-// Package examplecheck enforces REN-127's acceptance rule that every
+// Package examplecheck enforces the acceptance rule that every
 // exported identifier in format/, theme/, and component/ is covered by
 // at least one godoc Example* function — so pkg.go.dev renders a usage
 // block for each symbol downstream consumers depend on.
@@ -59,8 +59,8 @@ var themeStyleConstructors = map[string]bool{
 // v0.2.0: package-level palette vars (BgPrimary, Accent, etc.) were
 // removed in favour of the Theme struct; ActivityColors/Icons remain
 // as vars initialised from the default theme.
-// REN-1330: registry entry types and GlobalRegistry are also swept by
-// the package-level Example rather than requiring per-type examples.
+// Registry entry types and GlobalRegistry are also swept by the
+// package-level Example rather than requiring per-type examples.
 var themePackageLevelCovered = map[string]bool{
 	"ActivityColors": true,
 	"ActivityIcons":  true,
