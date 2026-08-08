@@ -68,7 +68,7 @@ func BenchmarkLogViewer_Append(b *testing.B) {
 // assignment must not grow the backing array.
 //
 // This is the canonical "zero allocations per append beyond the ring
-// slot" assertion from the REN-123 acceptance criteria.
+// slot" assertion from the ratified acceptance criteria.
 func TestLogViewer_AppendRingAllocs(t *testing.T) {
 	const maxLines = 1000
 	m := NewLogViewer(WithMaxLines(maxLines))

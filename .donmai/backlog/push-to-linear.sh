@@ -1,10 +1,12 @@
 #!/bin/bash
 # Push tui-components backlog issues to Linear icebox
-# Usage: export $(grep -v '^#' /path/to/.env.local | grep -v '^$' | xargs) && bash .donmai/backlog/push-to-linear.sh
+# Usage: export $(grep -v '^#' /path/to/.env.local | grep -v '^$' | xargs) \
+#          BACKLOG_TEAM=<your-linear-team-key> && bash .donmai/backlog/push-to-linear.sh
 
 set -uo pipefail
 
-TEAM="Rensei"
+: "${BACKLOG_TEAM:?set BACKLOG_TEAM to the target Linear team key before running}"
+TEAM="$BACKLOG_TEAM"
 PROJECT="tui-components"
 STATE="Icebox"
 COUNT=0

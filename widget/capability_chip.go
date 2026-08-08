@@ -71,7 +71,7 @@ func WithCapabilityTheme(t theme.Theme) CapabilityChipOption {
 }
 
 // WithCapabilityAccessibleLabel sets the accessible label used by
-// screen-reader consumers (REN-1332 a11y opt-in).
+// screen-reader consumers (a11y opt-in).
 func WithCapabilityAccessibleLabel(label string) CapabilityChipOption {
 	return func(c *CapabilityChip) { c.accessLabel = label }
 }
