@@ -13,7 +13,6 @@ import (
 	"go/token"
 	"os"
 	"path/filepath"
-	"runtime"
 	"sort"
 	"strings"
 	"testing"
@@ -211,12 +210,24 @@ func parsePackage(t *testing.T, dir string) (exports []string, examples map[stri
 	return exports, examples, hasPackageExample
 }
 
+// repoRoot returns the module root by walking up from the working directory
+// (the package directory under `go test`) to go.mod. runtime.Caller is
+// deliberately avoided: under `-trimpath` it returns a module-relative path
+// rather than a location on disk.
 func repoRoot(t *testing.T) string {
 	t.Helper()
-	_, file, _, ok := runtime.Caller(0)
-	if !ok {
-		t.Fatal("runtime.Caller failed")
+	dir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
 	}
-	// This file: <root>/internal/examplecheck/examplecheck_test.go
-	return filepath.Join(filepath.Dir(file), "..", "..")
+	for {
+		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
+			return dir
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			t.Fatal("no go.mod found walking up from the working directory")
+		}
+		dir = parent
+	}
 }
