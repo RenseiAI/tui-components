@@ -1,15 +1,15 @@
 module github.com/RenseiAI/tui-components
 
-go 1.25.9
+go 1.26.0
 
 require (
 	charm.land/bubbles/v2 v2.2.1
-	charm.land/bubbletea/v2 v2.0.9
+	charm.land/bubbletea/v2 v2.0.10
 	charm.land/lipgloss/v2 v2.0.6
 	github.com/bradleyjkemp/cupaloy/v2 v2.8.0
 	github.com/charmbracelet/log v1.0.0
 	github.com/charmbracelet/x/ansi v0.11.8
-	github.com/charmbracelet/x/exp/golden v0.0.0-20260413165052-6921c759c913
+	github.com/charmbracelet/x/exp/golden v0.1.0
 )
 
 require (
